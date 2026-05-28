@@ -3,6 +3,7 @@ package com.amiraq.nabd.tabs
 import android.util.Log
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.GeckoView
 
 /**
@@ -29,13 +30,21 @@ class TabManager(
     /**
      * Creates a new tab, opens its session, and switches to it.
      */
-    fun createTab(initialUrl: String): BrowserTab {
-        val tab = BrowserTab(url = initialUrl)
+    fun createTab(initialUrl: String, isPrivate: Boolean = false): BrowserTab {
+        val session = if (isPrivate) {
+            GeckoSession(GeckoSessionSettings.Builder().usePrivateMode(true).build())
+        } else {
+            GeckoSession()
+        }
+        val tab = BrowserTab(url = initialUrl, session = session, isPrivate = isPrivate)
         tab.session.open(runtime)
         tabs.add(tab)
         switchToTab(tab.id)
         return tab
     }
+
+    fun getPrivateTabs(): List<BrowserTab> = tabs.filter { it.isPrivate }
+    fun getNormalTabs(): List<BrowserTab> = tabs.filter { !it.isPrivate }
 
     /**
      * Switches the active tab. Detaches the current session from GeckoView

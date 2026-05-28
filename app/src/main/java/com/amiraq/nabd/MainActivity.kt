@@ -133,6 +133,10 @@ class MainActivity : AppCompatActivity() {
     override fun onStop() { tabManager.getActiveSession()?.setActive(false); super.onStop() }
     override fun onDestroy() {
         dismissExtensionPopup()
+        // Close private tabs (they should never persist)
+        for (tab in tabManager.getPrivateTabs()) {
+            tabManager.closeTab(tab.id, DEFAULT_HOME)
+        }
         // Clear on exit if enabled
         if (isFinishing && ::settingsRepository.isInitialized && settingsRepository.isClearOnExitEnabled()) {
             try {
@@ -215,8 +219,8 @@ class MainActivity : AppCompatActivity() {
         val isBookmarked = bookmarkRepository.isBookmarked(activeUrl)
         val bookmarkLabel = if (isBookmarked) getString(R.string.menu_remove_bookmark) else getString(R.string.menu_add_bookmark)
         val immersiveLabel = if (browserChrome.visibility == View.VISIBLE) getString(R.string.menu_hide_toolbar) else getString(R.string.menu_show_toolbar)
-        val items = arrayOf(bookmarkLabel, getString(R.string.menu_bookmarks), getString(R.string.menu_history), getString(R.string.menu_downloads), getString(R.string.find_in_page), getString(R.string.reader_mode), getString(R.string.menu_share_page), getString(R.string.menu_copy_link), immersiveLabel, getString(R.string.privacy_report_title), getString(R.string.clear_browsing_data), getString(R.string.settings_title))
-        MaterialAlertDialogBuilder(this).setItems(items) { _, which -> when (which) { 0 -> toggleBookmark(); 1 -> showBookmarksDialog(); 2 -> showHistoryDialog(); 3 -> startActivity(Intent(this, DownloadsActivity::class.java)); 4 -> showFindBar(); 5 -> openReaderMode(); 6 -> sharePage(); 7 -> copyPageLink(); 8 -> toggleToolbarVisibility(); 9 -> showPrivacyReport(); 10 -> startActivity(Intent(this, com.amiraq.nabd.privacy.ClearBrowsingDataActivity::class.java)); 11 -> startActivity(Intent(this, SettingsActivity::class.java)) } }.show()
+        val items = arrayOf(bookmarkLabel, getString(R.string.menu_bookmarks), getString(R.string.menu_history), getString(R.string.menu_downloads), getString(R.string.find_in_page), getString(R.string.reader_mode), getString(R.string.menu_share_page), getString(R.string.menu_copy_link), getString(R.string.menu_new_private_tab), immersiveLabel, getString(R.string.privacy_report_title), getString(R.string.clear_browsing_data), getString(R.string.settings_title))
+        MaterialAlertDialogBuilder(this).setItems(items) { _, which -> when (which) { 0 -> toggleBookmark(); 1 -> showBookmarksDialog(); 2 -> showHistoryDialog(); 3 -> startActivity(Intent(this, DownloadsActivity::class.java)); 4 -> showFindBar(); 5 -> openReaderMode(); 6 -> sharePage(); 7 -> copyPageLink(); 8 -> openNewPrivateTab(); 9 -> toggleToolbarVisibility(); 10 -> showPrivacyReport(); 11 -> startActivity(Intent(this, com.amiraq.nabd.privacy.ClearBrowsingDataActivity::class.java)); 12 -> startActivity(Intent(this, SettingsActivity::class.java)) } }.show()
     }
     private fun toggleBookmark() {
         val tab = tabManager.getActiveTab() ?: return
@@ -236,6 +240,14 @@ class MainActivity : AppCompatActivity() {
             tab.session.loadUri(DEFAULT_HOME)
             updateTabCountButton()
         }
+    }
+
+    private fun openNewPrivateTab() {
+        val tab = tabManager.createTab("", isPrivate = true)
+        tab.isHomePage = true
+        setupTabDelegates(tab)
+        updateTabCountButton()
+        showHomePage()
     }
     private fun toggleToolbarVisibility() {
         if (browserChrome.visibility == View.VISIBLE) {
@@ -283,7 +295,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun refreshHomePage() {
         renderQuickLinks()
-        renderRecentSites()
+        val activeTab = tabManager.getActiveTab()
+        if (activeTab?.isPrivate == true) {
+            // Hide recent sites in private mode
+            homeRecentContainer.removeAllViews()
+            val note = TextView(this).apply {
+                text = getString(R.string.private_browsing_note)
+                textSize = 13f
+                setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurfaceVariant))
+                setPadding(dp(4), dp(8), dp(4), dp(8))
+            }
+            homeRecentContainer.addView(note)
+        } else {
+            renderRecentSites()
+        }
     }
 
     private fun setupHomeSearchInput() {
@@ -521,9 +546,18 @@ class MainActivity : AppCompatActivity() {
     }
     private fun getErrorColor(): Int { val tv = android.util.TypedValue(); theme.resolveAttribute(android.R.attr.colorError, tv, true); return if (tv.data != 0) tv.data else android.graphics.Color.parseColor("#BA1A1A") }
     private fun getThemeColor(attr: Int): Int { val tv = android.util.TypedValue(); theme.resolveAttribute(attr, tv, true); return tv.data }
-    private fun updateTabCountButton() { tabCountButton.text = tabManager.getTabCount().toString() }
+    private fun updateTabCountButton() {
+        val count = tabManager.getTabCount().toString()
+        val isPrivate = tabManager.getActiveTab()?.isPrivate == true
+        tabCountButton.text = if (isPrivate) "🕶$count" else count
+    }
     private fun updateProgressForTab(tab: BrowserTab) { if (tab.isLoading) { pageProgress.progress = tab.progress.coerceIn(0, 100); pageProgress.visibility = View.VISIBLE } else pageProgress.visibility = View.GONE }
-    private fun recordHistory(title: String, url: String) { historyRepository.addVisit(title, url) }
+    private fun recordHistory(title: String, url: String) {
+        // Do not record history for private tabs
+        val activeTab = tabManager.getActiveTab()
+        if (activeTab?.isPrivate == true) return
+        historyRepository.addVisit(title, url)
+    }
 
     private fun showPrivacyReport() {
         val url = tabManager.getActiveTab()?.url.orEmpty().ifBlank { "—" }
@@ -701,8 +735,9 @@ class MainActivity : AppCompatActivity() {
         container.addView(TextView(this).apply { text = getString(R.string.tabs_title, tabs.size); textSize = 18f; setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurface)); setPadding(0, 0, 0, dp(12)) })
         for (tab in tabs) {
             val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER_VERTICAL; setPadding(dp(8), dp(12), dp(8), dp(12)); if (tab.id == activeTab?.id) setBackgroundColor(getThemeColor(com.google.android.material.R.attr.colorSurfaceVariant)) }
-            val displayText = tab.title.ifBlank { tab.url.ifBlank { "New Tab" } }
-            row.addView(TextView(this).apply { text = if (displayText.length > 40) displayText.take(40) + "…" else displayText; textSize = 14f; setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurface)); layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f) })
+            val displayText = tab.title.ifBlank { tab.url.ifBlank { if (tab.isPrivate) "Private Tab" else "New Tab" } }
+            val prefix = if (tab.isPrivate) "🕶 " else ""
+            row.addView(TextView(this).apply { text = prefix + (if (displayText.length > 38) displayText.take(38) + "…" else displayText); textSize = 14f; setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurface)); layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f) })
             row.addView(TextView(this).apply { text = "✕"; textSize = 18f; setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurfaceVariant)); setPadding(dp(12), dp(4), dp(4), dp(4)); setOnClickListener { tabManager.closeTab(tab.id, DEFAULT_HOME)?.let { n -> if (tabManager.getTabs().any { it.id == n.id && it.url == DEFAULT_HOME && it.title.isBlank() }) { setupTabDelegates(n); n.session.loadUri(DEFAULT_HOME) } }; updateTabCountButton(); dialog.dismiss() } })
             row.setOnClickListener { tabManager.switchToTab(tab.id); updateTabCountButton(); dialog.dismiss() }
             container.addView(row)
@@ -812,7 +847,10 @@ class MainActivity : AppCompatActivity() {
     }
     private fun looksLikeDomain(input: String): Boolean { if (input.any { it.isWhitespace() }) return false; return Regex("^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+(?::\\d{1,5})?(?:/.*)?$").matches(input) }
     private fun updateUrlField(url: String) { if (urlEditText.text?.toString() == url) return; urlEditText.setText(url); urlEditText.setSelection(urlEditText.text?.length ?: 0) }
-    private fun saveLastUrl(url: String) { preferences.edit().putString(PREF_LAST_URL, url).apply() }
+    private fun saveLastUrl(url: String) {
+        if (tabManager.getActiveTab()?.isPrivate == true) return
+        preferences.edit().putString(PREF_LAST_URL, url).apply()
+    }
     private fun hideKeyboard() { val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager; imm?.hideSoftInputFromWindow(urlEditText.windowToken, 0); urlEditText.clearFocus() }
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
