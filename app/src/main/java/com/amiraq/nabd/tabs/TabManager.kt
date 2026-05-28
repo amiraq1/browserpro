@@ -172,7 +172,31 @@ class TabManager(
         }
     }
 
+    /**
+     * Toggles desktop mode for the given tab by setting/clearing the User-Agent override.
+     */
+    fun toggleDesktopMode(tabId: String): BrowserTab? {
+        val tab = tabs.find { it.id == tabId } ?: return null
+        tab.isDesktopMode = !tab.isDesktopMode
+        applyUserAgent(tab)
+        return tab
+    }
+
+    private fun applyUserAgent(tab: BrowserTab) {
+        try {
+            tab.session.settings.userAgentOverride = if (tab.isDesktopMode) {
+                DESKTOP_USER_AGENT
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to set User-Agent override", e)
+        }
+    }
+
     companion object {
         private const val TAG = "TabManager"
+        private const val DESKTOP_USER_AGENT =
+            "Mozilla/5.0 (X11; Linux x86_64; rv:126.0) Gecko/20100101 Firefox/126.0"
     }
 }

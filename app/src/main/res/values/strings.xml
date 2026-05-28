@@ -102,6 +102,8 @@
     <string name="search_engine_template_invalid">URL must be https://, contain %s, and be a valid URL.</string>
     <string name="menu_new_private_tab">New Private Tab</string>
     <string name="private_browsing_note">🕶 Private browsing — history will not be saved.</string>
+    <string name="menu_desktop_off">Desktop Site</string>
+    <string name="menu_desktop_on">Desktop Site ✓</string>
     <string name="setting_use_remote">Use Remote Summarizer</string>
     <string name="setting_use_remote_description">Send page text to your backend for AI summarization. When off, a local mock summary is used.</string>
     <string name="setting_endpoint_hint">Backend URL</string>

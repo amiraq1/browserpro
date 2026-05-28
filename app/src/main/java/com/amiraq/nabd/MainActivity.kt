@@ -219,8 +219,9 @@ class MainActivity : AppCompatActivity() {
         val isBookmarked = bookmarkRepository.isBookmarked(activeUrl)
         val bookmarkLabel = if (isBookmarked) getString(R.string.menu_remove_bookmark) else getString(R.string.menu_add_bookmark)
         val immersiveLabel = if (browserChrome.visibility == View.VISIBLE) getString(R.string.menu_hide_toolbar) else getString(R.string.menu_show_toolbar)
-        val items = arrayOf(bookmarkLabel, getString(R.string.menu_bookmarks), getString(R.string.menu_history), getString(R.string.menu_downloads), getString(R.string.find_in_page), getString(R.string.reader_mode), getString(R.string.menu_share_page), getString(R.string.menu_copy_link), getString(R.string.menu_new_private_tab), immersiveLabel, getString(R.string.privacy_report_title), getString(R.string.clear_browsing_data), getString(R.string.settings_title))
-        MaterialAlertDialogBuilder(this).setItems(items) { _, which -> when (which) { 0 -> toggleBookmark(); 1 -> showBookmarksDialog(); 2 -> showHistoryDialog(); 3 -> startActivity(Intent(this, DownloadsActivity::class.java)); 4 -> showFindBar(); 5 -> openReaderMode(); 6 -> sharePage(); 7 -> copyPageLink(); 8 -> openNewPrivateTab(); 9 -> toggleToolbarVisibility(); 10 -> showPrivacyReport(); 11 -> startActivity(Intent(this, com.amiraq.nabd.privacy.ClearBrowsingDataActivity::class.java)); 12 -> startActivity(Intent(this, SettingsActivity::class.java)) } }.show()
+        val desktopLabel = if (tabManager.getActiveTab()?.isDesktopMode == true) getString(R.string.menu_desktop_on) else getString(R.string.menu_desktop_off)
+        val items = arrayOf(bookmarkLabel, getString(R.string.menu_bookmarks), getString(R.string.menu_history), getString(R.string.menu_downloads), getString(R.string.find_in_page), getString(R.string.reader_mode), getString(R.string.menu_share_page), getString(R.string.menu_copy_link), getString(R.string.menu_new_private_tab), desktopLabel, immersiveLabel, getString(R.string.privacy_report_title), getString(R.string.clear_browsing_data), getString(R.string.settings_title))
+        MaterialAlertDialogBuilder(this).setItems(items) { _, which -> when (which) { 0 -> toggleBookmark(); 1 -> showBookmarksDialog(); 2 -> showHistoryDialog(); 3 -> startActivity(Intent(this, DownloadsActivity::class.java)); 4 -> showFindBar(); 5 -> openReaderMode(); 6 -> sharePage(); 7 -> copyPageLink(); 8 -> openNewPrivateTab(); 9 -> toggleDesktopMode(); 10 -> toggleToolbarVisibility(); 11 -> showPrivacyReport(); 12 -> startActivity(Intent(this, com.amiraq.nabd.privacy.ClearBrowsingDataActivity::class.java)); 13 -> startActivity(Intent(this, SettingsActivity::class.java)) } }.show()
     }
     private fun toggleBookmark() {
         val tab = tabManager.getActiveTab() ?: return
@@ -248,6 +249,17 @@ class MainActivity : AppCompatActivity() {
         setupTabDelegates(tab)
         updateTabCountButton()
         showHomePage()
+    }
+
+    private fun toggleDesktopMode() {
+        val tab = tabManager.getActiveTab() ?: return
+        tabManager.toggleDesktopMode(tab.id)
+        val label = if (tab.isDesktopMode) getString(R.string.menu_desktop_on) else getString(R.string.menu_desktop_off)
+        com.google.android.material.snackbar.Snackbar.make(geckoView, label, com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show()
+        // Reload current page if it's a real URL
+        if (tab.url.startsWith("http://") || tab.url.startsWith("https://")) {
+            tab.session.reload()
+        }
     }
     private fun toggleToolbarVisibility() {
         if (browserChrome.visibility == View.VISIBLE) {

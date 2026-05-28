@@ -17,5 +17,6 @@ data class BrowserTab(
     var isLoading: Boolean = false,
     var progress: Int = 0,
     var isHomePage: Boolean = false,
-    val isPrivate: Boolean = false
+    val isPrivate: Boolean = false,
+    var isDesktopMode: Boolean = false
 )
