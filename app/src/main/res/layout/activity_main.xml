@@ -226,17 +226,24 @@
 
     </LinearLayout>
 
-    <FrameLayout
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <org.mozilla.geckoview.GeckoView
-            android:id="@+id/geckoView"
+        <FrameLayout
+            android:id="@+id/browserContentContainer"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="?attr/colorSurface" />
+            android:layout_height="match_parent">
 
-        <include layout="@layout/view_home_page" />
-    </FrameLayout>
+            <org.mozilla.geckoview.GeckoView
+                android:id="@+id/geckoView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?attr/colorSurface" />
+
+            <include layout="@layout/view_home_page" />
+        </FrameLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </LinearLayout>

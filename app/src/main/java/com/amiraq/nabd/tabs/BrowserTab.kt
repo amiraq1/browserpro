@@ -1,6 +1,7 @@
 package com.amiraq.nabd.tabs
 
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSessionSettings
 import java.util.UUID
 
 /**
@@ -15,5 +16,7 @@ data class BrowserTab(
     var canGoForward: Boolean = false,
     var isLoading: Boolean = false,
     var progress: Int = 0,
-    var isHomePage: Boolean = false
+    var isHomePage: Boolean = false,
+    val isPrivate: Boolean = false,
+    var isDesktopMode: Boolean = false
 )

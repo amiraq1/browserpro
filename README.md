@@ -378,6 +378,28 @@ New tabs display a native custom homepage with:
 
 **Storage:** Quick links are persisted in SharedPreferences (JSON). Recently visited uses the existing history repository.
 
+## Clear Browsing Data
+
+Available from ⋮ → "Clear Browsing Data":
+
+| Category | Default Selected | Description |
+|----------|-----------------|-------------|
+| Browsing history | ✓ | Clears all visited page records |
+| Cookies & site data | ✓ | Clears GeckoView cookies and site storage |
+| Cached files | ✓ | Clears GeckoView network and image cache |
+| Download records | ✗ | Removes download history (not the files) |
+| Bookmarks | ✗ | Deletes all saved bookmarks |
+| Quick links | ✗ | Resets homepage quick links to defaults |
+| Settings | ✗ | Resets all app preferences to defaults |
+
+**Clear on Exit:** Enable in Settings to automatically clear history, cookies, and cache when the app closes normally.
+
+**Technical details:**
+- Local data (history, bookmarks, downloads, quick links) uses SharedPreferences clearing.
+- GeckoView data (cookies, cache) uses `StorageController.clearData()` with appropriate flags.
+- A confirmation dialog prevents accidental data loss.
+- Bookmarks and settings are never cleared by default — explicit selection required.
+
 ## File Tree
 
 ```text

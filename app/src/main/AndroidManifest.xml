@@ -7,13 +7,16 @@
     <application
         android:allowBackup="true"
         android:hardwareAccelerated="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.Nabd"
         android:usesCleartextTraffic="true">
         <activity
             android:name="com.amiraq.nabd.MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.Nabd.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -28,6 +31,12 @@
             android:exported="false" />
         <activity
             android:name="com.amiraq.nabd.reader.ReaderActivity"
+            android:exported="false" />
+        <activity
+            android:name="com.amiraq.nabd.privacy.ClearBrowsingDataActivity"
+            android:exported="false" />
+        <activity
+            android:name="com.amiraq.nabd.about.AboutActivity"
             android:exported="false" />
         <receiver
             android:name="com.amiraq.nabd.downloads.DownloadCompleteReceiver"

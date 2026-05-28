@@ -46,6 +46,10 @@ class BookmarkRepository(context: Context) {
         saveBookmarks(bookmarks)
     }
 
+    fun clearBookmarks() {
+        prefs.edit().remove(KEY_BOOKMARKS).apply()
+    }
+
     fun isBookmarked(url: String): Boolean {
         return loadBookmarks().any { it.url == url }
     }

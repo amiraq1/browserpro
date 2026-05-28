@@ -1,30 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="nabd_primary">#006D77</color>
+    <!-- Primary: Teal/Cyan inspired by modern browser UIs -->
+    <color name="nabd_primary">#0D7377</color>
     <color name="nabd_on_primary">#FFFFFF</color>
-    <color name="nabd_primary_dark">#7DDDE8</color>
-    <color name="nabd_on_primary_dark">#00363B</color>
+    <color name="nabd_primary_dark">#6DD5D9</color>
+    <color name="nabd_on_primary_dark">#003739</color>
+    <color name="nabd_primary_container">#B8F0F2</color>
+    <color name="nabd_primary_container_dark">#1A5C5E</color>
 
-    <color name="nabd_secondary">#6D5E00</color>
+    <!-- Secondary: Warm amber accent -->
+    <color name="nabd_secondary">#7A5C00</color>
     <color name="nabd_on_secondary">#FFFFFF</color>
-    <color name="nabd_secondary_dark">#E5CF59</color>
-    <color name="nabd_on_secondary_dark">#393000</color>
+    <color name="nabd_secondary_dark">#F0C645</color>
+    <color name="nabd_on_secondary_dark">#3F3000</color>
 
-    <color name="nabd_background">#FBFCFC</color>
-    <color name="nabd_on_background">#191C1D</color>
-    <color name="nabd_surface">#FBFCFC</color>
-    <color name="nabd_on_surface">#191C1D</color>
-    <color name="nabd_surface_dark">#101415</color>
-    <color name="nabd_on_surface_dark">#E0E3E3</color>
-    <color name="nabd_outline">#707878</color>
-    <color name="nabd_outline_dark">#8A9292</color>
+    <!-- Backgrounds and surfaces -->
+    <color name="nabd_background">#F8FAFA</color>
+    <color name="nabd_on_background">#1A1C1C</color>
+    <color name="nabd_surface">#F8FAFA</color>
+    <color name="nabd_on_surface">#1A1C1C</color>
+    <color name="nabd_surface_dark">#0F1415</color>
+    <color name="nabd_on_surface_dark">#E1E3E3</color>
 
+    <!-- Surface variants -->
+    <color name="nabd_surface_variant">#DBE5E5</color>
+    <color name="nabd_surface_variant_dark">#3F4949</color>
+    <color name="nabd_on_surface_variant">#3F4949</color>
+    <color name="nabd_on_surface_variant_dark">#BFC9C9</color>
+
+    <!-- Outline -->
+    <color name="nabd_outline">#6F7979</color>
+    <color name="nabd_outline_dark">#899393</color>
+
+    <!-- Error -->
     <color name="nabd_error">#BA1A1A</color>
     <color name="nabd_on_error">#FFFFFF</color>
     <color name="nabd_error_dark">#FFB4AB</color>
     <color name="nabd_on_error_dark">#690005</color>
-    <color name="nabd_surface_variant">#DAE5E5</color>
-    <color name="nabd_surface_variant_dark">#3F4949</color>
-    <color name="nabd_on_surface_variant">#3F4949</color>
-    <color name="nabd_on_surface_variant_dark">#BEC9C9</color>
+
+    <!-- Homepage specific -->
+    <color name="nabd_home_card_bg">#FFFFFF</color>
+    <color name="nabd_home_card_bg_dark">#1C2224</color>
+    <color name="nabd_home_search_bg">#FFFFFF</color>
+    <color name="nabd_home_search_bg_dark">#1C2224</color>
 </resources>
