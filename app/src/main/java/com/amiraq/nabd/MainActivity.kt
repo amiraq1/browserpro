@@ -20,6 +20,8 @@ import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.amiraq.nabd.bookmarks.BookmarkRepository
 import com.amiraq.nabd.downloads.DownloadItem
 import com.amiraq.nabd.downloads.DownloadRepository
@@ -44,9 +46,11 @@ import com.amiraq.nabd.session.SavedTabState
 import com.amiraq.nabd.session.SessionRepository
 import com.amiraq.nabd.share.ShareUtils
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
@@ -99,7 +103,7 @@ class MainActivity : AppCompatActivity() {
     private var summarizerAction: WebExtension.Action? = null
     private var popupDialog: Dialog? = null
     private var popupSession: GeckoSession? = null
-    private lateinit var homePageContainer: ScrollView
+    private lateinit var homePageContainer: androidx.core.widget.NestedScrollView
     private lateinit var homeSearchInput: TextInputEditText
     private lateinit var homeQuickLinksContainer: android.widget.GridLayout
     private lateinit var homeRecentContainer: LinearLayout
@@ -122,6 +126,7 @@ class MainActivity : AppCompatActivity() {
         sessionRepository = SessionRepository(this)
         summarizer = SummarizerFactory.create(settingsRepository)
         bindViews()
+        applySafeAreaInsets()
         setupGeckoRuntime()
         setupTabManager()
         setupBrowserControls()
@@ -190,6 +195,20 @@ class MainActivity : AppCompatActivity() {
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
         browserContentContainer = findViewById(R.id.browserContentContainer)
     }
+
+    private fun applySafeAreaInsets() {
+        val start = browserChrome.paddingStart
+        val top = browserChrome.paddingTop
+        val end = browserChrome.paddingEnd
+        val bottom = browserChrome.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(browserChrome) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPaddingRelative(start, top + bars.top, end, bottom)
+            insets
+        }
+        ViewCompat.requestApplyInsets(browserChrome)
+    }
+
     private fun setupGeckoRuntime() { try { geckoRuntime = GeckoRuntime.create(this); PrivacyProtectionManager.applyToRuntime(geckoRuntime.settings, settingsRepository) } catch (e: Exception) { Log.e(TAG, "Failed to create GeckoRuntime", e) } }
     private fun setupTabManager() { tabManager = TabManager(geckoRuntime, geckoView) { tab -> if (isWebFullscreen) exitWebFullscreen(); hideFindBarSilently(); if (tab.isHomePage) showHomePage() else hideHomePage(); updateUrlField(tab.url); updateProgressForTab(tab); updateTabCountButton(); reRegisterExtensionDelegateForActiveTab() } }
     private fun setupTabDelegates(tab: BrowserTab) { tab.session.setProgressDelegate(createProgressDelegate(tab)); tab.session.setNavigationDelegate(createNavigationDelegate(tab)); tab.session.setContentDelegate(createContentDelegate()) }
@@ -313,7 +332,8 @@ class MainActivity : AppCompatActivity() {
         homePageContainer.visibility = View.VISIBLE
         geckoView.visibility = View.GONE
         urlEditText.setText("")
-        refreshHomePage()
+        homeSearchInput.setText("")
+        renderHomePage()
     }
 
     private fun hideHomePage() {
@@ -321,8 +341,10 @@ class MainActivity : AppCompatActivity() {
         geckoView.visibility = View.VISIBLE
     }
 
-    private fun refreshHomePage() {
-        renderQuickLinks()
+    private fun refreshHomePage() = renderHomePage()
+
+    private fun renderHomePage() {
+        renderFavoriteSites()
         val activeTab = tabManager.getActiveTab()
         if (activeTab?.isPrivate == true) {
             // Hide recent sites in private mode
@@ -343,7 +365,7 @@ class MainActivity : AppCompatActivity() {
         homeSearchInput.setOnEditorActionListener { _, actionId, event ->
             val isEnterUp = event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP
             val isGoAction = actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_SEARCH
-            if (isEnterUp || isGoAction) { loadFromHomeInput(homeSearchInput.text?.toString().orEmpty()); true } else false
+            if (isEnterUp || isGoAction) { handleHomeSearch(homeSearchInput.text?.toString().orEmpty()); true } else false
         }
     }
 
@@ -469,27 +491,30 @@ class MainActivity : AppCompatActivity() {
         return lower.startsWith("http://") || lower.startsWith("https://")
     }
 
-    private fun loadFromHomeInput(rawInput: String) {
-        val url = normalizeInput(rawInput)
+    private fun loadFromHomeInput(rawInput: String) = handleHomeSearch(rawInput)
+
+    private fun handleHomeSearch(input: String) {
+        val url = normalizeInput(input)
         if (url.isBlank()) return
-        hideKeyboard()
+        hideKeyboardFrom(homeSearchInput)
+        openHomeUrl(url)
+    }
+
+    private fun openHomeUrl(url: String) {
+        if (url.isBlank() || isInternalHomeUrl(url)) return
         tabManager.getActiveTab()?.isHomePage = false
         hideHomePage()
         loadUrl(url)
     }
 
-    private fun renderQuickLinks() {
+    private fun renderFavoriteSites() {
         homeQuickLinksContainer.removeAllViews()
         val links = homePageRepository.getQuickLinks()
-        val columnCount = 4
+        val columnCount = 2
         homeQuickLinksContainer.columnCount = columnCount
 
         for (link in links) {
-            val card = createQuickLinkCard(link.title, link.url) {
-                tabManager.getActiveTab()?.isHomePage = false
-                hideHomePage()
-                loadUrl(link.url)
-            }
+            val card = createFavoriteSiteCard(link.title, link.url, isAddCard = false) { openHomeUrl(link.url) }
             card.setOnLongClickListener {
                 showQuickLinkOptionsDialog(link)
                 true
@@ -503,8 +528,7 @@ class MainActivity : AppCompatActivity() {
             homeQuickLinksContainer.addView(card, params)
         }
 
-        // Add button
-        val addCard = createQuickLinkCard("+", getString(R.string.home_add_quick_link)) {
+        val addCard = createFavoriteSiteCard(getString(R.string.home_add_site), "", isAddCard = true) {
             showAddFavoriteDialog()
         }
         val addParams = android.widget.GridLayout.LayoutParams().apply {
@@ -516,46 +540,58 @@ class MainActivity : AppCompatActivity() {
         homeQuickLinksContainer.addView(addCard, addParams)
     }
 
-    private fun createQuickLinkCard(title: String, @Suppress("UNUSED_PARAMETER") subtitle: String, onClick: () -> Unit): View {
-        val card = com.google.android.material.card.MaterialCardView(this).apply {
-            radius = dp(16).toFloat()
-            cardElevation = dp(3).toFloat()
-            strokeWidth = 0
-            setContentPadding(dp(6), dp(14), dp(6), dp(10))
+    private fun createFavoriteSiteCard(title: String, url: String, isAddCard: Boolean, onClick: () -> Unit): View {
+        val card = MaterialCardView(this).apply {
+            radius = dp(18).toFloat()
+            cardElevation = dp(1).toFloat()
+            strokeWidth = dp(1)
+            strokeColor = getThemeColor(com.google.android.material.R.attr.colorOutline)
+            setCardBackgroundColor(getThemeColor(com.google.android.material.R.attr.colorSurface))
+            setContentPadding(dp(12), dp(12), dp(12), dp(12))
             setOnClickListener { onClick() }
+            contentDescription = if (isAddCard) getString(R.string.home_add_quick_link) else "$title, ${formatHost(url)}"
             isClickable = true
             isFocusable = true
         }
-        val inner = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = android.view.Gravity.CENTER
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_LTR
         }
-        // Circular initial with theme-aware background
         val initial = TextView(this).apply {
-            val letter = if (title == "+") "+" else title.take(1).uppercase()
-            text = letter
-            textSize = 20f
+            text = if (isAddCard) "+" else title.take(1).uppercase()
+            textSize = if (isAddCard) 22f else 16f
             gravity = android.view.Gravity.CENTER
-            setTextColor(getThemeColor(androidx.appcompat.R.attr.colorPrimary))
-            val size = dp(44)
+            setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnPrimary))
+            val size = dp(40)
             layoutParams = LinearLayout.LayoutParams(size, size)
             background = android.graphics.drawable.GradientDrawable().apply {
                 shape = android.graphics.drawable.GradientDrawable.OVAL
-                setColor(getThemeColor(com.google.android.material.R.attr.colorSurfaceVariant))
+                setColor(getThemeColor(androidx.appcompat.R.attr.colorPrimary))
             }
-            setPadding(0, dp(10), 0, 0)
         }
-        inner.addView(initial)
-        val label = TextView(this).apply {
-            text = title.take(8)
-            textSize = 11f
-            gravity = android.view.Gravity.CENTER
+        row.addView(initial)
+        val textColumn = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(10), 0, 0, 0)
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        textColumn.addView(com.google.android.material.textview.MaterialTextView(this).apply {
+            text = title
+            textSize = 14f
             maxLines = 1
-            setPadding(0, dp(6), 0, 0)
+            ellipsize = android.text.TextUtils.TruncateAt.END
             setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurface))
-        }
-        inner.addView(label)
-        card.addView(inner)
+        })
+        textColumn.addView(com.google.android.material.textview.MaterialTextView(this).apply {
+            text = if (isAddCard) getString(R.string.home_favorite_url_hint) else formatHost(url)
+            textSize = 12f
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurfaceVariant))
+        })
+        row.addView(textColumn)
+        card.addView(row)
         return card
     }
 
@@ -563,55 +599,118 @@ class MainActivity : AppCompatActivity() {
         val options = arrayOf(getString(R.string.home_open), getString(R.string.home_edit), getString(R.string.home_remove))
         MaterialAlertDialogBuilder(this).setTitle(link.title).setItems(options) { _, which ->
             when (which) {
-                0 -> { tabManager.getActiveTab()?.isHomePage = false; hideHomePage(); loadUrl(link.url) }
+                0 -> openHomeUrl(link.url)
                 1 -> showEditFavoriteDialog(link)
-                2 -> { homePageRepository.removeQuickLink(link.id); renderQuickLinks() }
+                2 -> confirmRemoveFavorite(link)
             }
         }.show()
     }
 
     private fun showAddFavoriteDialog() {
-        val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(24), dp(16), dp(24), dp(8)) }
-        val nameInput = com.google.android.material.textfield.TextInputEditText(this).apply { hint = getString(R.string.home_favorite_name_hint) }
-        val urlInput = com.google.android.material.textfield.TextInputEditText(this).apply { hint = getString(R.string.home_favorite_url_hint) }
-        layout.addView(nameInput); layout.addView(urlInput)
-        MaterialAlertDialogBuilder(this).setTitle(R.string.home_add_quick_link).setView(layout)
-            .setPositiveButton(R.string.setting_save) { _, _ ->
-                val name = nameInput.text?.toString().orEmpty().trim()
-                val url = urlInput.text?.toString().orEmpty().trim()
-                if (name.isNotBlank() && url.isNotBlank()) {
-                    val normalizedUrl = if (url.startsWith("http://") || url.startsWith("https://")) url else "https://$url"
-                    homePageRepository.addQuickLink(name, normalizedUrl)
-                    renderQuickLinks()
-                }
-            }
-            .setNegativeButton(android.R.string.cancel, null).show()
+        showFavoriteEditorDialog(
+            titleRes = R.string.home_add_dialog_title,
+            initialName = "",
+            initialUrl = "",
+            existingId = null
+        )
     }
 
     private fun showEditFavoriteDialog(link: com.amiraq.nabd.home.HomeQuickLink) {
-        val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(24), dp(16), dp(24), dp(8)) }
-        val nameInput = com.google.android.material.textfield.TextInputEditText(this).apply { hint = getString(R.string.home_favorite_name_hint); setText(link.title) }
-        val urlInput = com.google.android.material.textfield.TextInputEditText(this).apply { hint = getString(R.string.home_favorite_url_hint); setText(link.url) }
-        layout.addView(nameInput); layout.addView(urlInput)
-        MaterialAlertDialogBuilder(this).setTitle(R.string.home_edit_favorite).setView(layout)
-            .setPositiveButton(R.string.setting_save) { _, _ ->
-                val name = nameInput.text?.toString().orEmpty().trim()
-                val url = urlInput.text?.toString().orEmpty().trim()
-                if (name.isNotBlank() && url.isNotBlank()) {
-                    homePageRepository.removeQuickLink(link.id)
-                    val normalizedUrl = if (url.startsWith("http://") || url.startsWith("https://")) url else "https://$url"
-                    homePageRepository.addQuickLink(name, normalizedUrl)
-                    renderQuickLinks()
+        showFavoriteEditorDialog(
+            titleRes = R.string.home_edit_favorite,
+            initialName = link.title,
+            initialUrl = link.url,
+            existingId = link.id
+        )
+    }
+
+    private fun showFavoriteEditorDialog(titleRes: Int, initialName: String, initialUrl: String, existingId: String?) {
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(24), dp(12), dp(24), 0)
+        }
+        val nameField = createFavoriteDialogField(getString(R.string.home_favorite_name_hint), initialName, android.text.InputType.TYPE_CLASS_TEXT)
+        val urlField = createFavoriteDialogField(getString(R.string.home_favorite_url_hint), initialUrl, android.text.InputType.TYPE_TEXT_VARIATION_URI)
+        layout.addView(nameField.first)
+        layout.addView(urlField.first)
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(titleRes)
+            .setView(layout)
+            .setPositiveButton(R.string.setting_save, null)
+            .setNegativeButton(android.R.string.cancel, null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                nameField.first.error = null
+                urlField.first.error = null
+                val name = nameField.second.text?.toString().orEmpty().trim()
+                val normalizedUrl = normalizeFavoriteUrl(urlField.second.text?.toString().orEmpty())
+                var valid = true
+                if (name.isBlank()) {
+                    nameField.first.error = getString(R.string.home_error_name_required)
+                    valid = false
                 }
+                if (normalizedUrl == null) {
+                    urlField.first.error = getString(R.string.home_error_url_invalid)
+                    valid = false
+                } else if (isDuplicateFavoriteUrl(normalizedUrl, existingId)) {
+                    urlField.first.error = getString(R.string.home_error_duplicate_url)
+                    valid = false
+                }
+                if (!valid || normalizedUrl == null) return@setOnClickListener
+
+                if (existingId == null) {
+                    homePageRepository.addQuickLink(name, normalizedUrl)
+                } else {
+                    homePageRepository.updateQuickLink(existingId, name, normalizedUrl)
+                }
+                renderFavoriteSites()
+                dialog.dismiss()
             }
-            .setNegativeButton(android.R.string.cancel, null).show()
+        }
+        dialog.show()
+    }
+
+    private fun createFavoriteDialogField(hint: String, value: String, inputType: Int): Pair<TextInputLayout, TextInputEditText> {
+        val input = TextInputEditText(this).apply {
+            setText(value)
+            this.inputType = inputType
+            maxLines = 1
+            isSingleLine = true
+        }
+        val layout = TextInputLayout(this).apply {
+            this.hint = hint
+            boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
+            isErrorEnabled = true
+            setBoxCornerRadii(dp(12).toFloat(), dp(12).toFloat(), dp(12).toFloat(), dp(12).toFloat())
+            addView(input)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { setMargins(0, dp(8), 0, 0) }
+        }
+        return layout to input
+    }
+
+    private fun confirmRemoveFavorite(link: com.amiraq.nabd.home.HomeQuickLink) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.home_remove_favorite_title)
+            .setMessage(getString(R.string.home_remove_favorite_message, link.title))
+            .setPositiveButton(R.string.home_remove) { _, _ ->
+                homePageRepository.removeQuickLink(link.id)
+                renderFavoriteSites()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun renderRecentSites() {
         homeRecentContainer.removeAllViews()
         val recent = historyRepository.getHistory().take(5)
         if (recent.isEmpty()) {
-            val empty = TextView(this).apply {
+            val empty = com.google.android.material.textview.MaterialTextView(this).apply {
                 text = getString(R.string.home_no_recent)
                 textSize = 14f
                 setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurfaceVariant))
@@ -621,25 +720,33 @@ class MainActivity : AppCompatActivity() {
             return
         }
         for (item in recent) {
+            if (!isWebUrl(item.url)) continue
+            val card = MaterialCardView(this).apply {
+                radius = dp(16).toFloat()
+                cardElevation = dp(0).toFloat()
+                strokeWidth = dp(1)
+                strokeColor = getThemeColor(com.google.android.material.R.attr.colorOutline)
+                setCardBackgroundColor(getThemeColor(com.google.android.material.R.attr.colorSurface))
+                contentDescription = "${item.title.ifBlank { formatHost(item.url) }}, ${formatHost(item.url)}"
+                setContentPadding(dp(12), dp(12), dp(12), dp(12))
+                setOnClickListener { openHomeUrl(item.url) }
+                isClickable = true
+                isFocusable = true
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { setMargins(0, 0, 0, dp(8)) }
+            }
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = android.view.Gravity.CENTER_VERTICAL
-                setPadding(dp(12), dp(14), dp(12), dp(14))
-                setOnClickListener {
-                    tabManager.getActiveTab()?.isHomePage = false
-                    hideHomePage()
-                    loadUrl(item.url)
-                }
-                isClickable = true
-                isFocusable = true
             }
-            // Domain initial circle
-            val domain = try { android.net.Uri.parse(item.url).host ?: "" } catch (e: Exception) { "" }
+            val domain = formatHost(item.url)
             val circle = TextView(this).apply {
-                text = domain.removePrefix("www.").take(1).uppercase()
+                text = domain.take(1).uppercase()
                 textSize = 14f
                 gravity = android.view.Gravity.CENTER
-                setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurfaceVariant))
+                setTextColor(getThemeColor(androidx.appcompat.R.attr.colorPrimary))
                 val size = dp(36)
                 layoutParams = LinearLayout.LayoutParams(size, size)
                 background = android.graphics.drawable.GradientDrawable().apply {
@@ -654,20 +761,23 @@ class MainActivity : AppCompatActivity() {
                 setPadding(dp(12), 0, 0, 0)
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             }
-            textContainer.addView(TextView(this).apply {
-                text = item.title.take(40)
+            textContainer.addView(com.google.android.material.textview.MaterialTextView(this).apply {
+                text = item.title.ifBlank { domain }
                 textSize = 14f
                 maxLines = 1
+                ellipsize = android.text.TextUtils.TruncateAt.END
                 setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurface))
             })
-            textContainer.addView(TextView(this).apply {
-                text = domain.removePrefix("www.")
+            textContainer.addView(com.google.android.material.textview.MaterialTextView(this).apply {
+                text = domain
                 textSize = 12f
                 maxLines = 1
+                ellipsize = android.text.TextUtils.TruncateAt.END
                 setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurfaceVariant))
             })
             row.addView(textContainer)
-            homeRecentContainer.addView(row)
+            card.addView(row)
+            homeRecentContainer.addView(card)
         }
     }
 
@@ -696,16 +806,53 @@ class MainActivity : AppCompatActivity() {
     }
     private fun getErrorColor(): Int { val tv = android.util.TypedValue(); theme.resolveAttribute(android.R.attr.colorError, tv, true); return if (tv.data != 0) tv.data else android.graphics.Color.parseColor("#BA1A1A") }
     private fun getThemeColor(attr: Int): Int { val tv = android.util.TypedValue(); theme.resolveAttribute(attr, tv, true); return tv.data }
+    private fun normalizeFavoriteUrl(rawUrl: String): String? {
+        val input = rawUrl.trim()
+        if (input.isBlank() || isInternalHomeUrl(input)) return null
+        val candidate = if (input.startsWith("http://", true) || input.startsWith("https://", true)) {
+            input
+        } else if (looksLikeDomain(input)) {
+            "https://$input"
+        } else {
+            return null
+        }
+        return if (isWebUrl(candidate)) candidate else null
+    }
+
+    private fun isDuplicateFavoriteUrl(url: String, existingId: String?): Boolean {
+        val key = favoriteUrlKey(url)
+        return homePageRepository.getQuickLinks().any { link ->
+            link.id != existingId && favoriteUrlKey(link.url) == key
+        }
+    }
+
+    private fun favoriteUrlKey(url: String): String = url.trim().trimEnd('/').lowercase(Locale.US)
+
+    private fun formatHost(url: String): String = try {
+        android.net.Uri.parse(url).host.orEmpty().removePrefix("www.").ifBlank { url }
+    } catch (e: Exception) {
+        url
+    }
+
+    private fun isWebUrl(url: String): Boolean {
+        val uri = try { android.net.Uri.parse(url) } catch (e: Exception) { return false }
+        val scheme = uri.scheme?.lowercase(Locale.US) ?: return false
+        return (scheme == "http" || scheme == "https") && !uri.host.isNullOrBlank()
+    }
+
+    private fun isInternalHomeUrl(url: String): Boolean = url.startsWith("nabd://", ignoreCase = true)
+
     private fun updateTabCountButton() {
         val count = tabManager.getTabCount().toString()
         val isPrivate = tabManager.getActiveTab()?.isPrivate == true
-        tabCountButton.text = if (isPrivate) "🕶$count" else count
+        tabCountButton.text = if (isPrivate) "P$count" else count
     }
     private fun updateProgressForTab(tab: BrowserTab) { if (tab.isLoading) { pageProgress.progress = tab.progress.coerceIn(0, 100); pageProgress.visibility = View.VISIBLE } else pageProgress.visibility = View.GONE }
     private fun recordHistory(title: String, url: String) {
         // Do not record history for private tabs
         val activeTab = tabManager.getActiveTab()
         if (activeTab?.isPrivate == true) return
+        if (activeTab?.isHomePage == true || !isWebUrl(url)) return
         historyRepository.addVisit(title, url)
     }
 
@@ -950,7 +1097,20 @@ class MainActivity : AppCompatActivity() {
         override fun onPageStop(session: GeckoSession, success: Boolean) { tab.isLoading = false; tab.progress = 100; if (tab.id == tabManager.getActiveTab()?.id) { pageProgress.progress = 100; pageProgress.visibility = View.GONE; swipeRefreshLayout.isRefreshing = false }; if (success && tab.url.isNotBlank()) recordHistory(tab.title.ifBlank { tab.url }, tab.url); if (!success) Log.e(TAG, "Page failed in tab ${tab.id}") }
     }
     private fun createNavigationDelegate(tab: BrowserTab) = object : GeckoSession.NavigationDelegate {
-        override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>, hasUserGesture: Boolean) { if (!url.isNullOrBlank()) { tab.url = url; tab.isHomePage = false; if (tab.id == tabManager.getActiveTab()?.id) { hideHomePage(); updateUrlField(url); saveLastUrl(url) } } }
+        override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>, hasUserGesture: Boolean) {
+            if (url.isNullOrBlank()) return
+            if (url == "about:blank") {
+                if (tab.isHomePage && tab.id == tabManager.getActiveTab()?.id) showHomePage()
+                return
+            }
+            tab.url = url
+            tab.isHomePage = false
+            if (tab.id == tabManager.getActiveTab()?.id) {
+                hideHomePage()
+                updateUrlField(url)
+                saveLastUrl(url)
+            }
+        }
         override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) { tab.canGoBack = canGoBack }
         override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) { tab.canGoForward = canGoForward }
         override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? { Log.e(TAG, "Load error for $uri: code=${error.code}"); return null }
@@ -991,17 +1151,20 @@ class MainActivity : AppCompatActivity() {
     private fun loadUrl(url: String) { try { updateUrlField(url); saveLastUrl(url); tabManager.getActiveSession()?.loadUri(url) } catch (e: Exception) { Log.e(TAG, "Unable to load URL: $url", e) } }
     private fun normalizeInput(rawInput: String): String {
         val input = rawInput.trim(); if (input.isBlank()) return ""
+        if (isInternalHomeUrl(input)) return ""
         if (input.startsWith("http://", true) || input.startsWith("https://", true)) return input
         if (looksLikeDomain(input)) return "https://$input"
         return searchEngineManager.buildSearchUrl(input)
     }
     private fun looksLikeDomain(input: String): Boolean { if (input.any { it.isWhitespace() }) return false; return Regex("^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+(?::\\d{1,5})?(?:/.*)?$").matches(input) }
-    private fun updateUrlField(url: String) { if (urlEditText.text?.toString() == url) return; urlEditText.setText(url); urlEditText.setSelection(urlEditText.text?.length ?: 0) }
+    private fun updateUrlField(url: String) { if (urlEditText.text?.toString() == url) return; urlEditText.setText(url); urlEditText.setSelection(0) }
     private fun saveLastUrl(url: String) {
         if (tabManager.getActiveTab()?.isPrivate == true) return
+        if (!isWebUrl(url)) return
         preferences.edit().putString(PREF_LAST_URL, url).apply()
     }
     private fun hideKeyboard() { val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager; imm?.hideSoftInputFromWindow(urlEditText.windowToken, 0); urlEditText.clearFocus() }
+    private fun hideKeyboardFrom(view: View) { val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager; imm?.hideSoftInputFromWindow(view.windowToken, 0); view.clearFocus() }
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     companion object {

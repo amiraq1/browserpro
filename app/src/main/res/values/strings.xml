@@ -65,9 +65,11 @@
     <string name="link_copied">Link copied</string>
     <string name="print_not_available">Printing is not available.</string>
     <string name="home_subtitle">Search or enter address</string>
-    <string name="home_quick_links">Quick Links</string>
+    <string name="home_quick_links">Favorite Sites</string>
     <string name="home_recently_visited">Recently Visited</string>
     <string name="home_add_quick_link">Add to Quick Links</string>
+    <string name="home_add_site">Add Site</string>
+    <string name="home_add_dialog_title">Add Favorite Site</string>
     <string name="home_favorite_name_hint">Name</string>
     <string name="home_favorite_url_hint">URL</string>
     <string name="home_edit_favorite">Edit Favorite</string>
@@ -75,6 +77,11 @@
     <string name="home_edit">Edit</string>
     <string name="home_remove">Remove</string>
     <string name="home_no_recent">No recent sites yet.</string>
+    <string name="home_error_name_required">Name must not be blank.</string>
+    <string name="home_error_url_invalid">Enter a valid http:// or https:// URL, or a domain like example.com.</string>
+    <string name="home_error_duplicate_url">This site is already in favorites.</string>
+    <string name="home_remove_favorite_title">Remove favorite?</string>
+    <string name="home_remove_favorite_message">Remove %1$s from Favorite Sites?</string>
     <string name="setting_custom_homepage">Custom homepage for new tabs</string>
     <string name="clear_browsing_data">Clear Browsing Data</string>
     <string name="clear_warning">This action cannot be undone. Select the data you want to clear.</string>
