@@ -38,6 +38,9 @@ import com.amiraq.nabd.reader.ReaderArticleStore
 import com.amiraq.nabd.reader.ReaderExtractor
 import com.amiraq.nabd.reader.ReaderResult
 import com.amiraq.nabd.search.SearchEngineManager
+import com.amiraq.nabd.session.BrowserSessionState
+import com.amiraq.nabd.session.SavedTabState
+import com.amiraq.nabd.session.SessionRepository
 import com.amiraq.nabd.share.ShareUtils
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -87,6 +90,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var downloadRepository: DownloadRepository
     private lateinit var homePageRepository: com.amiraq.nabd.home.HomePageRepository
     private lateinit var searchEngineManager: SearchEngineManager
+    private lateinit var sessionRepository: SessionRepository
     private lateinit var summarizer: Summarizer
     private lateinit var preferences: SharedPreferences
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -113,6 +117,7 @@ class MainActivity : AppCompatActivity() {
         downloadRepository = DownloadRepository(this)
         homePageRepository = com.amiraq.nabd.home.HomePageRepository(this)
         searchEngineManager = SearchEngineManager(settingsRepository)
+        sessionRepository = SessionRepository(this)
         summarizer = SummarizerFactory.create(settingsRepository)
         bindViews()
         setupGeckoRuntime()
@@ -120,20 +125,23 @@ class MainActivity : AppCompatActivity() {
         setupBrowserControls()
         setupBackNavigation()
         installSummarizerExtension()
-        val startUrl = preferences.getString(PREF_LAST_URL, DEFAULT_HOME).orEmpty().ifBlank { DEFAULT_HOME }
-        val firstTab = tabManager.createTab(startUrl)
-        setupTabDelegates(firstTab)
-        if (settingsRepository.isCustomHomepageEnabled() && startUrl == DEFAULT_HOME) {
-            firstTab.isHomePage = true
-            showHomePage()
-        } else {
-            firstTab.session.loadUri(startUrl)
+        // Restore session or create first tab
+        if (!restoreSavedSession()) {
+            val startUrl = preferences.getString(PREF_LAST_URL, DEFAULT_HOME).orEmpty().ifBlank { DEFAULT_HOME }
+            val firstTab = tabManager.createTab(startUrl)
+            setupTabDelegates(firstTab)
+            if (settingsRepository.isCustomHomepageEnabled() && startUrl == DEFAULT_HOME) {
+                firstTab.isHomePage = true
+                showHomePage()
+            } else {
+                firstTab.session.loadUri(startUrl)
+            }
         }
         updateTabCountButton()
     }
     override fun onStart() { super.onStart(); tabManager.getActiveSession()?.setActive(true) }
     override fun onResume() { super.onResume(); if (::settingsRepository.isInitialized) { summarizer = SummarizerFactory.create(settingsRepository); searchEngineManager = SearchEngineManager(settingsRepository); if (::geckoRuntime.isInitialized) PrivacyProtectionManager.applyToRuntime(geckoRuntime.settings, settingsRepository); updateGestureSettings() }; if (!isWebFullscreen) setSystemBarsVisible(true) }
-    override fun onStop() { tabManager.getActiveSession()?.setActive(false); super.onStop() }
+    override fun onStop() { tabManager.getActiveSession()?.setActive(false); saveCurrentSession(); super.onStop() }
     override fun onDestroy() {
         dismissExtensionPopup()
         // Close private tabs (they should never persist)
@@ -387,6 +395,76 @@ class MainActivity : AppCompatActivity() {
         if (::swipeRefreshLayout.isInitialized) {
             swipeRefreshLayout.isEnabled = settingsRepository.isPullToRefreshEnabled()
         }
+    }
+
+    // ─── Session Save/Restore ────────────────────────────────────────────────────
+
+    private fun saveCurrentSession() {
+        if (!::sessionRepository.isInitialized) return
+        try {
+            val normalTabs = tabManager.getNormalTabs()
+            val savedTabs = normalTabs.mapNotNull { tab ->
+                val url = tab.url
+                // Only save tabs with valid URLs or homepage tabs
+                if (tab.isHomePage || isRestorableUrl(url)) {
+                    SavedTabState(
+                        id = tab.id,
+                        title = tab.title,
+                        url = if (tab.isHomePage) "" else url,
+                        isHomePage = tab.isHomePage,
+                        isDesktopMode = tab.isDesktopMode
+                    )
+                } else null
+            }
+            if (savedTabs.isEmpty()) { sessionRepository.clearSession(); return }
+            // Find active normal tab
+            val activeTab = tabManager.getActiveTab()
+            val activeId = if (activeTab != null && !activeTab.isPrivate) activeTab.id else savedTabs.firstOrNull()?.id
+            sessionRepository.saveSession(BrowserSessionState(tabs = savedTabs, activeTabId = activeId))
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save session", e)
+        }
+    }
+
+    private fun restoreSavedSession(): Boolean {
+        if (!settingsRepository.isSessionRestoreEnabled()) return false
+        val state = sessionRepository.loadSession() ?: return false
+        if (state.tabs.isEmpty()) return false
+
+        var activeTabId: String? = null
+        for (saved in state.tabs) {
+            val tab = tabManager.createTab(saved.url, isPrivate = false)
+            setupTabDelegates(tab)
+            if (saved.isDesktopMode) {
+                tab.isDesktopMode = true
+                tabManager.toggleDesktopMode(tab.id) // applies UA
+                tab.isDesktopMode = true // ensure state after toggle
+            }
+            if (saved.isHomePage) {
+                tab.isHomePage = true
+            } else if (isRestorableUrl(saved.url)) {
+                tab.session.loadUri(saved.url)
+            } else {
+                tab.isHomePage = true
+            }
+            tab.title = saved.title
+            if (saved.id == state.activeTabId) activeTabId = tab.id
+        }
+
+        // Switch to active tab
+        val targetId = activeTabId ?: tabManager.getTabs().firstOrNull()?.id
+        if (targetId != null) {
+            tabManager.switchToTab(targetId)
+            val active = tabManager.getActiveTab()
+            if (active?.isHomePage == true) showHomePage()
+        }
+        return true
+    }
+
+    private fun isRestorableUrl(url: String): Boolean {
+        if (url.isBlank()) return false
+        val lower = url.lowercase()
+        return lower.startsWith("http://") || lower.startsWith("https://")
     }
 
     private fun loadFromHomeInput(rawInput: String) {

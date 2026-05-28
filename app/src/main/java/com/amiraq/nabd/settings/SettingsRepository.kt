@@ -97,6 +97,11 @@ class SettingsRepository(context: Context) {
     fun isPullToRefreshEnabled(): Boolean = prefs.getBoolean(KEY_PULL_REFRESH, true)
     fun setPullToRefreshEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_PULL_REFRESH, enabled).apply() }
 
+    // ─── Session Restore ─────────────────────────────────────────────────────────
+
+    fun isSessionRestoreEnabled(): Boolean = prefs.getBoolean(KEY_SESSION_RESTORE, true)
+    fun setSessionRestoreEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_SESSION_RESTORE, enabled).apply() }
+
     fun resetToDefaults() {
         prefs.edit()
             .putBoolean(KEY_USE_REMOTE, AppConfig.DEFAULT_USE_REMOTE_SUMMARIZER)
@@ -131,6 +136,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_CUSTOM_SEARCH_TEMPLATE = "custom_search_template"
         private const val KEY_SWIPE_NAV = "swipe_navigation_enabled"
         private const val KEY_PULL_REFRESH = "pull_to_refresh_enabled"
+        private const val KEY_SESSION_RESTORE = "session_restore_enabled"
         private const val DEFAULT_THEME_MODE = "system"
     }
 }

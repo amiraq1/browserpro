@@ -29,6 +29,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var fingerprinterSwitch: MaterialSwitch
     private lateinit var swipeNavSwitch: MaterialSwitch
     private lateinit var pullRefreshSwitch: MaterialSwitch
+    private lateinit var sessionRestoreSwitch: MaterialSwitch
     private lateinit var endpointLayout: TextInputLayout
     private lateinit var endpointInput: TextInputEditText
     private lateinit var languageLayout: TextInputLayout
@@ -64,6 +65,7 @@ class SettingsActivity : AppCompatActivity() {
         fingerprinterSwitch = findViewById(R.id.fingerprinterSwitch)
         swipeNavSwitch = findViewById(R.id.swipeNavSwitch)
         pullRefreshSwitch = findViewById(R.id.pullRefreshSwitch)
+        sessionRestoreSwitch = findViewById(R.id.sessionRestoreSwitch)
         remoteSwitch = findViewById(R.id.remoteSwitch)
         endpointLayout = findViewById(R.id.endpointLayout)
         endpointInput = findViewById(R.id.endpointInput)
@@ -92,6 +94,7 @@ class SettingsActivity : AppCompatActivity() {
         fingerprinterSwitch.isChecked = repository.isFingerprinterBlockingEnabled()
         swipeNavSwitch.isChecked = repository.isSwipeNavigationEnabled()
         pullRefreshSwitch.isChecked = repository.isPullToRefreshEnabled()
+        sessionRestoreSwitch.isChecked = repository.isSessionRestoreEnabled()
         updateFieldsEnabled()
         updateThemeButtonLabel()
         updateSearchEngineButtonLabel()
@@ -264,6 +267,7 @@ class SettingsActivity : AppCompatActivity() {
         repository.setFingerprinterBlockingEnabled(fingerprinterSwitch.isChecked)
         repository.setSwipeNavigationEnabled(swipeNavSwitch.isChecked)
         repository.setPullToRefreshEnabled(pullRefreshSwitch.isChecked)
+        repository.setSessionRestoreEnabled(sessionRestoreSwitch.isChecked)
 
         Snackbar.make(saveButton, R.string.settings_saved, Snackbar.LENGTH_SHORT).show()
     }
