@@ -113,8 +113,10 @@
     <string name="setting_swipe_navigation">Swipe back/forward</string>
     <string name="setting_pull_to_refresh">Pull to refresh</string>
     <string name="setting_gestures_section">Navigation Gestures</string>
-    <string name="setting_session_restore">Restore tabs on startup</string>
+    <string name="setting_session_restore">استعادة التبويبات عند البدء</string>
     <string name="setting_session_restore_desc">Reopen your normal tabs when نبض starts.</string>
+    <string name="setting_performance_mode">وضع الأداء السريع</string>
+    <string name="setting_performance_mode_desc">يقلل الفحص البصري لتحسين سرعة فتح المواقع مع إبقاء حظر الإعلانات فعالاً.</string>
     <string name="about_title">About نبض</string>
     <string name="about_subtitle">A GeckoView-powered Android browser</string>
     <string name="about_version_format">Version %1$s (%2$d)</string>
