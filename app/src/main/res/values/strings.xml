@@ -29,8 +29,14 @@
     <string name="download_btn">Download</string>
 
     <!-- Settings -->
-    <string name="settings_title">Settings</string>
-    <string name="setting_theme">Theme</string>
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_header_subtitle">متصفح آمن مع مانع إعلانات</string>
+    <string name="settings_adblock_title">مانع الإعلانات</string>
+    <string name="settings_adblock_desc">تشغيل الحماية من الإعلانات والتتبع</string>
+    <string name="settings_privacy_title">الخصوصية</string>
+    <string name="settings_privacy_info">• لا توجد إعلانات داخل التطبيق\n• لا يتم جمع بيانات المستخدم\n• تعطيل ملفات تعريف ارتباط الطرف الثالث\n• منع النوافذ المنبثقة</string>
+    <string name="settings_appearance_title">المظهر</string>
+    <string name="setting_theme">المظهر</string>
     <string name="theme_system">Follow system</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
