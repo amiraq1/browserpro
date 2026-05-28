@@ -7,17 +7,23 @@
     android:orientation="vertical">
 
     <LinearLayout
-        android:id="@+id/browserBar"
+        android:id="@+id/browserChrome"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/browserBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/colorSurface"
         android:gravity="center_vertical"
-        android:minHeight="64dp"
+        android:minHeight="56dp"
         android:orientation="horizontal"
-        android:paddingStart="12dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="8dp">
+        android:paddingStart="8dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="6dp">
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/urlInputLayout"
@@ -50,30 +56,74 @@
             android:id="@+id/goButton"
             style="@style/Widget.Material3.Button"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:minWidth="64dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="4dp"
+            android:minWidth="52dp"
             android:text="@string/go"
             android:textColor="?attr/colorOnPrimary"
             app:backgroundTint="?attr/colorPrimary"
-            app:cornerRadius="24dp"
-            app:iconGravity="textStart" />
+            app:cornerRadius="22dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/tabCountButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="4dp"
+            android:contentDescription="@string/tabs_button"
+            android:minWidth="40dp"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
+            android:text="1"
+            android:textColor="?attr/colorOnSurface"
+            app:cornerRadius="20dp"
+            app:strokeColor="?attr/colorOutline" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/newTabButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="36dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="2dp"
+            android:contentDescription="@string/new_tab"
+            android:minWidth="36dp"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
+            android:text="+"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="18sp"
+            app:cornerRadius="20dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/summarizeButton"
             style="@style/Widget.Material3.Button"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
+            android:layout_width="36dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="2dp"
             android:contentDescription="@string/summarize_page"
             android:enabled="false"
-            android:minWidth="48dp"
+            android:minWidth="36dp"
             android:paddingStart="0dp"
             android:paddingEnd="0dp"
             android:text="Σ"
             android:textColor="?attr/colorOnSecondary"
             app:backgroundTint="?attr/colorSecondary"
-            app:cornerRadius="24dp" />
+            app:cornerRadius="20dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/menuButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="36dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="2dp"
+            android:contentDescription="@string/menu_more"
+            android:minWidth="36dp"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
+            android:text="⋮"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="20sp"
+            app:cornerRadius="20dp" />
     </LinearLayout>
 
     <com.google.android.material.progressindicator.LinearProgressIndicator
@@ -86,10 +136,107 @@
         app:indicatorColor="?attr/colorPrimary"
         app:trackColor="?attr/colorSurface" />
 
-    <org.mozilla.geckoview.GeckoView
-        android:id="@+id/geckoView"
+    <!-- Find in Page Bar -->
+    <LinearLayout
+        android:id="@+id/findBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSurfaceVariant"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="4dp"
+        android:visibility="gone">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/findInputLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="@string/find_hint"
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:boxCornerRadiusBottomStart="16dp"
+            app:boxCornerRadiusTopEnd="16dp"
+            app:boxCornerRadiusTopStart="16dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/findEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/findCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:text="0/0"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="12sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/findPrevButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginStart="2dp"
+            android:contentDescription="@string/find_previous"
+            android:minWidth="36dp"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
+            android:text="↑"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:cornerRadius="18dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/findNextButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:contentDescription="@string/find_next"
+            android:minWidth="36dp"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
+            android:text="↓"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:cornerRadius="18dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/findCloseButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:contentDescription="@string/find_close"
+            android:minWidth="36dp"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
+            android:text="✕"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:cornerRadius="18dp" />
+    </LinearLayout>
+
+    </LinearLayout>
+
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="?attr/colorSurface" />
+        android:layout_weight="1">
+
+        <org.mozilla.geckoview.GeckoView
+            android:id="@+id/geckoView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/colorSurface" />
+
+        <include layout="@layout/view_home_page" />
+    </FrameLayout>
 </LinearLayout>
