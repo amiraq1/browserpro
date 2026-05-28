@@ -27,6 +27,9 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var trackerSwitch: MaterialSwitch
     private lateinit var cryptominerSwitch: MaterialSwitch
     private lateinit var fingerprinterSwitch: MaterialSwitch
+    private lateinit var cookieProtectionSwitch: MaterialSwitch
+    private lateinit var enhancedBlockingSwitch: MaterialSwitch
+    private lateinit var sponsorBlockSwitch: MaterialSwitch
     private lateinit var swipeNavSwitch: MaterialSwitch
     private lateinit var pullRefreshSwitch: MaterialSwitch
     private lateinit var sessionRestoreSwitch: MaterialSwitch
@@ -64,6 +67,9 @@ class SettingsActivity : AppCompatActivity() {
         trackerSwitch = findViewById(R.id.trackerSwitch)
         cryptominerSwitch = findViewById(R.id.cryptominerSwitch)
         fingerprinterSwitch = findViewById(R.id.fingerprinterSwitch)
+        cookieProtectionSwitch = findViewById(R.id.cookieProtectionSwitch)
+        enhancedBlockingSwitch = findViewById(R.id.enhancedBlockingSwitch)
+        sponsorBlockSwitch = findViewById(R.id.sponsorBlockSwitch)
         swipeNavSwitch = findViewById(R.id.swipeNavSwitch)
         pullRefreshSwitch = findViewById(R.id.pullRefreshSwitch)
         sessionRestoreSwitch = findViewById(R.id.sessionRestoreSwitch)
@@ -94,6 +100,9 @@ class SettingsActivity : AppCompatActivity() {
         trackerSwitch.isChecked = repository.isTrackerProtectionEnabled()
         cryptominerSwitch.isChecked = repository.isCryptominerBlockingEnabled()
         fingerprinterSwitch.isChecked = repository.isFingerprinterBlockingEnabled()
+        cookieProtectionSwitch.isChecked = repository.isCookieProtectionEnabled()
+        enhancedBlockingSwitch.isChecked = repository.isEnhancedBlockingEnabled()
+        sponsorBlockSwitch.isChecked = repository.isSponsorBlockEnabled()
         swipeNavSwitch.isChecked = repository.isSwipeNavigationEnabled()
         pullRefreshSwitch.isChecked = repository.isPullToRefreshEnabled()
         sessionRestoreSwitch.isChecked = repository.isSessionRestoreEnabled()
@@ -268,6 +277,9 @@ class SettingsActivity : AppCompatActivity() {
         repository.setTrackerProtectionEnabled(trackerSwitch.isChecked)
         repository.setCryptominerBlockingEnabled(cryptominerSwitch.isChecked)
         repository.setFingerprinterBlockingEnabled(fingerprinterSwitch.isChecked)
+        repository.setCookieProtectionEnabled(cookieProtectionSwitch.isChecked)
+        repository.setEnhancedBlockingEnabled(enhancedBlockingSwitch.isChecked)
+        repository.setSponsorBlockEnabled(sponsorBlockSwitch.isChecked)
         repository.setSwipeNavigationEnabled(swipeNavSwitch.isChecked)
         repository.setPullToRefreshEnabled(pullRefreshSwitch.isChecked)
         repository.setSessionRestoreEnabled(sessionRestoreSwitch.isChecked)

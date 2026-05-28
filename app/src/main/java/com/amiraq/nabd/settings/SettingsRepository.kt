@@ -69,6 +69,17 @@ class SettingsRepository(context: Context) {
     fun isFingerprinterBlockingEnabled(): Boolean = prefs.getBoolean(KEY_FINGERPRINTER_BLOCK, true)
     fun setFingerprinterBlockingEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_FINGERPRINTER_BLOCK, enabled).apply() }
 
+    fun isCookieProtectionEnabled(): Boolean = prefs.getBoolean(KEY_COOKIE_PROTECTION, true)
+    fun setCookieProtectionEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_COOKIE_PROTECTION, enabled).apply() }
+
+    fun isEnhancedBlockingEnabled(): Boolean = prefs.getBoolean(KEY_ENHANCED_BLOCKING, true)
+    fun setEnhancedBlockingEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_ENHANCED_BLOCKING, enabled).apply() }
+
+    // ─── Extensions ──────────────────────────────────────────────────────────────
+
+    fun isSponsorBlockEnabled(): Boolean = prefs.getBoolean(KEY_SPONSORBLOCK, false)
+    fun setSponsorBlockEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_SPONSORBLOCK, enabled).apply() }
+
     fun isImmersiveBrowsingEnabled(): Boolean = prefs.getBoolean(KEY_IMMERSIVE_BROWSING, false)
     fun setImmersiveBrowsingEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_IMMERSIVE_BROWSING, enabled).apply() }
 
@@ -133,6 +144,9 @@ class SettingsRepository(context: Context) {
         private const val KEY_TRACKER_PROTECTION = "tracker_protection_enabled"
         private const val KEY_CRYPTOMINER_BLOCK = "cryptominer_block_enabled"
         private const val KEY_FINGERPRINTER_BLOCK = "fingerprinter_block_enabled"
+        private const val KEY_COOKIE_PROTECTION = "cookie_protection_enabled"
+        private const val KEY_ENHANCED_BLOCKING = "enhanced_blocking_enabled"
+        private const val KEY_SPONSORBLOCK = "sponsorblock_extension_enabled"
         private const val KEY_IMMERSIVE_BROWSING = "immersive_browsing"
         private const val KEY_CUSTOM_HOMEPAGE = "custom_homepage"
         private const val KEY_CLEAR_ON_EXIT = "clear_on_exit"

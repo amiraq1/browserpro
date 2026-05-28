@@ -132,6 +132,8 @@ class MainActivity : AppCompatActivity() {
         setupBrowserControls()
         setupBackNavigation()
         installSummarizerExtension()
+        // Install other enabled embedded extensions
+        com.amiraq.nabd.extensions.ExtensionManager(this, geckoRuntime, settingsRepository).installEnabledExtensions()
         // Restore session or create first tab
         if (!restoreSavedSession()) {
             val startUrl = preferences.getString(PREF_LAST_URL, DEFAULT_HOME).orEmpty().ifBlank { DEFAULT_HOME }

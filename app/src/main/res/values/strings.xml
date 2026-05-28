@@ -45,7 +45,12 @@
     <string name="setting_ad_block">Block ads &amp; trackers</string>
     <string name="setting_tracker_protection">Tracker protection</string>
     <string name="setting_cryptominer_block">Block cryptominers</string>
-    <string name="setting_fingerprinter_block">Block fingerprinters</string>
+    <string name="setting_fingerprinter_block">حظر البصمات الرقمية</string>
+    <string name="setting_cookie_protection">حماية ملفات تعريف الارتباط</string>
+    <string name="setting_enhanced_blocking">الحظر المعزز</string>
+    <string name="settings_extensions_title">الإضافات المدمجة</string>
+    <string name="setting_sponsorblock">SponsorBlock for YouTube</string>
+    <string name="setting_sponsorblock_desc">Skips sponsor segments on YouTube using the SponsorBlock community database.</string>
     <string name="privacy_report_title">Privacy Protection</string>
     <string name="privacy_status_on">Active</string>
     <string name="privacy_status_off">Disabled</string>

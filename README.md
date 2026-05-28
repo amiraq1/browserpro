@@ -301,6 +301,22 @@ The app includes built-in privacy protection powered by GeckoView's Enhanced Tra
 - Protection does not interfere with the summarizer extension or downloads.
 - Future improvements may include per-site allowlists and custom filter lists.
 
+## Embedded Extensions
+
+The browser supports optional embedded WebExtensions loaded from APK assets:
+
+| Extension | Status | License | Description |
+|-----------|--------|---------|-------------|
+| Web Page Summarizer | Active | Built-in | Extracts and summarizes page content via native messaging |
+| SponsorBlock | Pending | GPL-3.0 | Skips sponsor segments on YouTube (requires built extension files) |
+
+**SponsorBlock integration:**
+- Toggle available in Settings (disabled by default).
+- Extension files must be placed in `assets/extensions/sponsorblock/` to activate.
+- If files are missing, the app logs a warning and continues normally — no crash.
+- SponsorBlock is open source (GPL-3.0): https://github.com/ajayyy/SponsorBlock
+- If bundled in a release, GPL-3.0 license terms apply to the extension files.
+
 ## Next Steps
 
 1. Tab session restore on app restart
