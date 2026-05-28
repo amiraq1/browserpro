@@ -38,6 +38,9 @@
         <activity
             android:name="com.amiraq.nabd.about.AboutActivity"
             android:exported="false" />
+        <activity
+            android:name="com.amiraq.nabd.agent.AgentControlActivity"
+            android:exported="false" />
         <receiver
             android:name="com.amiraq.nabd.downloads.DownloadCompleteReceiver"
             android:exported="false">

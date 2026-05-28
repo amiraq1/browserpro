@@ -80,6 +80,26 @@ class SettingsRepository(context: Context) {
     fun isSponsorBlockEnabled(): Boolean = prefs.getBoolean(KEY_SPONSORBLOCK, false)
     fun setSponsorBlockEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_SPONSORBLOCK, enabled).apply() }
 
+    // ─── Agent Bridge ────────────────────────────────────────────────────────────
+
+    fun isAgentBridgeEnabled(): Boolean = prefs.getBoolean(KEY_AGENT_ENABLED, false)
+    fun setAgentBridgeEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_AGENT_ENABLED, enabled).apply() }
+
+    fun isAgentDomReadAllowed(): Boolean = prefs.getBoolean(KEY_AGENT_DOM_READ, false)
+    fun setAgentDomReadAllowed(enabled: Boolean) { prefs.edit().putBoolean(KEY_AGENT_DOM_READ, enabled).apply() }
+
+    fun isAgentClickAllowed(): Boolean = prefs.getBoolean(KEY_AGENT_CLICK, false)
+    fun setAgentClickAllowed(enabled: Boolean) { prefs.edit().putBoolean(KEY_AGENT_CLICK, enabled).apply() }
+
+    fun isAgentTypingAllowed(): Boolean = prefs.getBoolean(KEY_AGENT_TYPING, false)
+    fun setAgentTypingAllowed(enabled: Boolean) { prefs.edit().putBoolean(KEY_AGENT_TYPING, enabled).apply() }
+
+    fun isAgentScrollAllowed(): Boolean = prefs.getBoolean(KEY_AGENT_SCROLL, false)
+    fun setAgentScrollAllowed(enabled: Boolean) { prefs.edit().putBoolean(KEY_AGENT_SCROLL, enabled).apply() }
+
+    fun isAgentSubmitAllowed(): Boolean = prefs.getBoolean(KEY_AGENT_SUBMIT, false)
+    fun setAgentSubmitAllowed(enabled: Boolean) { prefs.edit().putBoolean(KEY_AGENT_SUBMIT, enabled).apply() }
+
     fun isImmersiveBrowsingEnabled(): Boolean = prefs.getBoolean(KEY_IMMERSIVE_BROWSING, false)
     fun setImmersiveBrowsingEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_IMMERSIVE_BROWSING, enabled).apply() }
 
@@ -147,6 +167,12 @@ class SettingsRepository(context: Context) {
         private const val KEY_COOKIE_PROTECTION = "cookie_protection_enabled"
         private const val KEY_ENHANCED_BLOCKING = "enhanced_blocking_enabled"
         private const val KEY_SPONSORBLOCK = "sponsorblock_extension_enabled"
+        private const val KEY_AGENT_ENABLED = "agent_bridge_enabled"
+        private const val KEY_AGENT_DOM_READ = "agent_dom_read_allowed"
+        private const val KEY_AGENT_CLICK = "agent_click_allowed"
+        private const val KEY_AGENT_TYPING = "agent_typing_allowed"
+        private const val KEY_AGENT_SCROLL = "agent_scroll_allowed"
+        private const val KEY_AGENT_SUBMIT = "agent_submit_allowed"
         private const val KEY_IMMERSIVE_BROWSING = "immersive_browsing"
         private const val KEY_CUSTOM_HOMEPAGE = "custom_homepage"
         private const val KEY_CLEAR_ON_EXIT = "clear_on_exit"

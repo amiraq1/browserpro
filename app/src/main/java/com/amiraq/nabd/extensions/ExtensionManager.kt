@@ -26,6 +26,7 @@ class ExtensionManager(
 ) {
 
     private var sponsorBlockExtension: WebExtension? = null
+    private var agentBridgeExtension: WebExtension? = null
 
     /**
      * Installs all enabled embedded extensions.
@@ -35,7 +36,15 @@ class ExtensionManager(
         if (settings.isSponsorBlockEnabled()) {
             installSponsorBlock()
         }
+        if (settings.isAgentBridgeEnabled()) {
+            installAgentBridge()
+        }
     }
+
+    /**
+     * Returns the installed Agent Bridge extension for delegate registration.
+     */
+    fun getAgentBridgeExtension(): WebExtension? = agentBridgeExtension
 
     /**
      * Installs SponsorBlock extension if its files exist in assets.
@@ -74,12 +83,45 @@ class ExtensionManager(
         }
     }
 
+    /**
+     * Installs Agent Bridge extension if its files exist in assets.
+     */
+    private fun installAgentBridge() {
+        if (!extensionFilesExist(AGENT_BRIDGE_ASSET_PATH)) {
+            Log.w(TAG, "Agent Bridge extension files are missing; skipping install")
+            return
+        }
+
+        runtime.webExtensionController
+            .ensureBuiltIn(AGENT_BRIDGE_LOCATION, AGENT_BRIDGE_ID)
+            .accept({ extension ->
+                if (extension != null) {
+                    agentBridgeExtension = extension
+                    // Register message delegate for native messaging
+                    extension.setMessageDelegate(
+                        com.amiraq.nabd.agent.AgentBridgeMessageDelegate(settings),
+                        com.amiraq.nabd.agent.AgentBridgeMessageDelegate.NATIVE_APP_ID
+                    )
+                    Log.d(TAG, "Agent Bridge extension installed and delegate registered")
+                } else {
+                    Log.w(TAG, "Agent Bridge extension returned null from ensureBuiltIn")
+                }
+            }, { throwable ->
+                Log.e(TAG, "Failed to install Agent Bridge extension", throwable)
+            })
+    }
+
     companion object {
         private const val TAG = "ExtensionManager"
 
         // SponsorBlock
         private const val SPONSORBLOCK_LOCATION = "resource://android/assets/extensions/sponsorblock/"
-        private const val SPONSORBLOCK_ID = "nicedoc@nicedoc.io" // placeholder until real extension is added
+        private const val SPONSORBLOCK_ID = "nicedoc@nicedoc.io"
         private const val SPONSORBLOCK_ASSET_PATH = "extensions/sponsorblock"
+
+        // Agent Bridge
+        const val AGENT_BRIDGE_LOCATION = "resource://android/assets/agent-bridge/"
+        const val AGENT_BRIDGE_ID = "agent-bridge@browserpro.local"
+        private const val AGENT_BRIDGE_ASSET_PATH = "agent-bridge"
     }
 }
