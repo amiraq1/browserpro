@@ -20,8 +20,6 @@ import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.amiraq.nabd.bookmarks.BookmarkRepository
 import com.amiraq.nabd.downloads.DownloadItem
 import com.amiraq.nabd.downloads.DownloadRepository
@@ -126,7 +124,6 @@ class MainActivity : AppCompatActivity() {
         sessionRepository = SessionRepository(this)
         summarizer = SummarizerFactory.create(settingsRepository)
         bindViews()
-        applySafeAreaInsets()
         setupGeckoRuntime()
         setupTabManager()
         setupBrowserControls()
@@ -197,7 +194,6 @@ class MainActivity : AppCompatActivity() {
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
         browserContentContainer = findViewById(R.id.browserContentContainer)
     }
- feature/phases-2-to-16
     private fun setupGeckoRuntime() {
         try {
             val settings = org.mozilla.geckoview.GeckoRuntimeSettings.Builder()
@@ -210,23 +206,6 @@ class MainActivity : AppCompatActivity() {
             Log.e(TAG, "Failed to create GeckoRuntime", e)
         }
     }
-
-
-    private fun applySafeAreaInsets() {
-        val start = browserChrome.paddingStart
-        val top = browserChrome.paddingTop
-        val end = browserChrome.paddingEnd
-        val bottom = browserChrome.paddingBottom
-        ViewCompat.setOnApplyWindowInsetsListener(browserChrome) { view, insets ->
-            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPaddingRelative(start, top + bars.top, end, bottom)
-            insets
-        }
-        ViewCompat.requestApplyInsets(browserChrome)
-    }
-
-    private fun setupGeckoRuntime() { try { geckoRuntime = GeckoRuntime.create(this); PrivacyProtectionManager.applyToRuntime(geckoRuntime.settings, settingsRepository) } catch (e: Exception) { Log.e(TAG, "Failed to create GeckoRuntime", e) } }
-  main
     private fun setupTabManager() { tabManager = TabManager(geckoRuntime, geckoView) { tab -> if (isWebFullscreen) exitWebFullscreen(); hideFindBarSilently(); if (tab.isHomePage) showHomePage() else hideHomePage(); updateUrlField(tab.url); updateProgressForTab(tab); updateTabCountButton(); reRegisterExtensionDelegateForActiveTab() } }
     private fun setupTabDelegates(tab: BrowserTab) { tab.session.setProgressDelegate(createProgressDelegate(tab)); tab.session.setNavigationDelegate(createNavigationDelegate(tab)); tab.session.setContentDelegate(createContentDelegate()) }
     private fun setupBrowserControls() {
