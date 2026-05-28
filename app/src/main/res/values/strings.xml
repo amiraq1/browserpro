@@ -68,6 +68,13 @@
     <string name="home_quick_links">Quick Links</string>
     <string name="home_recently_visited">Recently Visited</string>
     <string name="home_add_quick_link">Add to Quick Links</string>
+    <string name="home_favorite_name_hint">Name</string>
+    <string name="home_favorite_url_hint">URL</string>
+    <string name="home_edit_favorite">Edit Favorite</string>
+    <string name="home_open">Open</string>
+    <string name="home_edit">Edit</string>
+    <string name="home_remove">Remove</string>
+    <string name="home_no_recent">No recent sites yet.</string>
     <string name="setting_custom_homepage">Custom homepage for new tabs</string>
     <string name="clear_browsing_data">Clear Browsing Data</string>
     <string name="clear_warning">This action cannot be undone. Select the data you want to clear.</string>

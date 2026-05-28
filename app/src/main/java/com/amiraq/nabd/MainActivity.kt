@@ -96,7 +96,7 @@ class MainActivity : AppCompatActivity() {
     private var popupSession: GeckoSession? = null
     private lateinit var homePageContainer: ScrollView
     private lateinit var homeSearchInput: TextInputEditText
-    private lateinit var homeQuickLinksContainer: LinearLayout
+    private lateinit var homeQuickLinksContainer: android.widget.GridLayout
     private lateinit var homeRecentContainer: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -306,36 +306,192 @@ class MainActivity : AppCompatActivity() {
     private fun renderQuickLinks() {
         homeQuickLinksContainer.removeAllViews()
         val links = homePageRepository.getQuickLinks()
+        val columnCount = 4
+        homeQuickLinksContainer.columnCount = columnCount
+
         for (link in links) {
-            val btn = MaterialButton(this).apply {
-                text = link.title
-                textSize = 13f
-                setOnClickListener {
-                    tabManager.getActiveTab()?.isHomePage = false
-                    hideHomePage()
-                    loadUrl(link.url)
+            val card = createQuickLinkCard(link.title, link.url) {
+                tabManager.getActiveTab()?.isHomePage = false
+                hideHomePage()
+                loadUrl(link.url)
+            }
+            card.setOnLongClickListener {
+                showQuickLinkOptionsDialog(link)
+                true
+            }
+            val params = android.widget.GridLayout.LayoutParams().apply {
+                width = 0
+                height = android.widget.GridLayout.LayoutParams.WRAP_CONTENT
+                columnSpec = android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED, 1, 1f)
+                setMargins(dp(4), dp(4), dp(4), dp(4))
+            }
+            homeQuickLinksContainer.addView(card, params)
+        }
+
+        // Add button
+        val addCard = createQuickLinkCard("+", getString(R.string.home_add_quick_link)) {
+            showAddFavoriteDialog()
+        }
+        val addParams = android.widget.GridLayout.LayoutParams().apply {
+            width = 0
+            height = android.widget.GridLayout.LayoutParams.WRAP_CONTENT
+            columnSpec = android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED, 1, 1f)
+            setMargins(dp(4), dp(4), dp(4), dp(4))
+        }
+        homeQuickLinksContainer.addView(addCard, addParams)
+    }
+
+    private fun createQuickLinkCard(title: String, @Suppress("UNUSED_PARAMETER") subtitle: String, onClick: () -> Unit): View {
+        val card = com.google.android.material.card.MaterialCardView(this).apply {
+            radius = dp(16).toFloat()
+            cardElevation = dp(3).toFloat()
+            strokeWidth = 0
+            setContentPadding(dp(6), dp(14), dp(6), dp(10))
+            setOnClickListener { onClick() }
+            isClickable = true
+            isFocusable = true
+        }
+        val inner = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER
+        }
+        // Circular initial with theme-aware background
+        val initial = TextView(this).apply {
+            val letter = if (title == "+") "+" else title.take(1).uppercase()
+            text = letter
+            textSize = 20f
+            gravity = android.view.Gravity.CENTER
+            setTextColor(getThemeColor(androidx.appcompat.R.attr.colorPrimary))
+            val size = dp(44)
+            layoutParams = LinearLayout.LayoutParams(size, size)
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.OVAL
+                setColor(getThemeColor(com.google.android.material.R.attr.colorSurfaceVariant))
+            }
+            setPadding(0, dp(10), 0, 0)
+        }
+        inner.addView(initial)
+        val label = TextView(this).apply {
+            text = title.take(8)
+            textSize = 11f
+            gravity = android.view.Gravity.CENTER
+            maxLines = 1
+            setPadding(0, dp(6), 0, 0)
+            setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurface))
+        }
+        inner.addView(label)
+        card.addView(inner)
+        return card
+    }
+
+    private fun showQuickLinkOptionsDialog(link: com.amiraq.nabd.home.HomeQuickLink) {
+        val options = arrayOf(getString(R.string.home_open), getString(R.string.home_edit), getString(R.string.home_remove))
+        MaterialAlertDialogBuilder(this).setTitle(link.title).setItems(options) { _, which ->
+            when (which) {
+                0 -> { tabManager.getActiveTab()?.isHomePage = false; hideHomePage(); loadUrl(link.url) }
+                1 -> showEditFavoriteDialog(link)
+                2 -> { homePageRepository.removeQuickLink(link.id); renderQuickLinks() }
+            }
+        }.show()
+    }
+
+    private fun showAddFavoriteDialog() {
+        val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(24), dp(16), dp(24), dp(8)) }
+        val nameInput = com.google.android.material.textfield.TextInputEditText(this).apply { hint = getString(R.string.home_favorite_name_hint) }
+        val urlInput = com.google.android.material.textfield.TextInputEditText(this).apply { hint = getString(R.string.home_favorite_url_hint) }
+        layout.addView(nameInput); layout.addView(urlInput)
+        MaterialAlertDialogBuilder(this).setTitle(R.string.home_add_quick_link).setView(layout)
+            .setPositiveButton(R.string.setting_save) { _, _ ->
+                val name = nameInput.text?.toString().orEmpty().trim()
+                val url = urlInput.text?.toString().orEmpty().trim()
+                if (name.isNotBlank() && url.isNotBlank()) {
+                    val normalizedUrl = if (url.startsWith("http://") || url.startsWith("https://")) url else "https://$url"
+                    homePageRepository.addQuickLink(name, normalizedUrl)
+                    renderQuickLinks()
                 }
             }
-            homeQuickLinksContainer.addView(btn)
-        }
+            .setNegativeButton(android.R.string.cancel, null).show()
+    }
+
+    private fun showEditFavoriteDialog(link: com.amiraq.nabd.home.HomeQuickLink) {
+        val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(24), dp(16), dp(24), dp(8)) }
+        val nameInput = com.google.android.material.textfield.TextInputEditText(this).apply { hint = getString(R.string.home_favorite_name_hint); setText(link.title) }
+        val urlInput = com.google.android.material.textfield.TextInputEditText(this).apply { hint = getString(R.string.home_favorite_url_hint); setText(link.url) }
+        layout.addView(nameInput); layout.addView(urlInput)
+        MaterialAlertDialogBuilder(this).setTitle(R.string.home_edit_favorite).setView(layout)
+            .setPositiveButton(R.string.setting_save) { _, _ ->
+                val name = nameInput.text?.toString().orEmpty().trim()
+                val url = urlInput.text?.toString().orEmpty().trim()
+                if (name.isNotBlank() && url.isNotBlank()) {
+                    homePageRepository.removeQuickLink(link.id)
+                    val normalizedUrl = if (url.startsWith("http://") || url.startsWith("https://")) url else "https://$url"
+                    homePageRepository.addQuickLink(name, normalizedUrl)
+                    renderQuickLinks()
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null).show()
     }
 
     private fun renderRecentSites() {
         homeRecentContainer.removeAllViews()
-        val recent = historyRepository.getHistory().take(6)
-        if (recent.isEmpty()) return
+        val recent = historyRepository.getHistory().take(5)
+        if (recent.isEmpty()) {
+            val empty = TextView(this).apply {
+                text = getString(R.string.home_no_recent)
+                textSize = 14f
+                setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurfaceVariant))
+                setPadding(dp(4), dp(12), dp(4), dp(12))
+            }
+            homeRecentContainer.addView(empty)
+            return
+        }
         for (item in recent) {
-            val row = TextView(this).apply {
-                text = "${item.title.take(35)}\n${item.url.take(50)}"
-                textSize = 13f
-                setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurface))
-                setPadding(dp(4), dp(8), dp(4), dp(8))
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                setPadding(dp(12), dp(14), dp(12), dp(14))
                 setOnClickListener {
                     tabManager.getActiveTab()?.isHomePage = false
                     hideHomePage()
                     loadUrl(item.url)
                 }
+                isClickable = true
+                isFocusable = true
             }
+            // Domain initial circle
+            val domain = try { android.net.Uri.parse(item.url).host ?: "" } catch (e: Exception) { "" }
+            val circle = TextView(this).apply {
+                text = domain.removePrefix("www.").take(1).uppercase()
+                textSize = 14f
+                gravity = android.view.Gravity.CENTER
+                setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurfaceVariant))
+                val size = dp(36)
+                layoutParams = LinearLayout.LayoutParams(size, size)
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    shape = android.graphics.drawable.GradientDrawable.OVAL
+                    setColor(getThemeColor(com.google.android.material.R.attr.colorSurfaceVariant))
+                }
+                setPadding(0, dp(7), 0, 0)
+            }
+            row.addView(circle)
+            val textContainer = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(12), 0, 0, 0)
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            textContainer.addView(TextView(this).apply {
+                text = item.title.take(40)
+                textSize = 14f
+                maxLines = 1
+                setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurface))
+            })
+            textContainer.addView(TextView(this).apply {
+                text = domain.removePrefix("www.")
+                textSize = 12f
+                maxLines = 1
+                setTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurfaceVariant))
+            })
+            row.addView(textContainer)
             homeRecentContainer.addView(row)
         }
     }

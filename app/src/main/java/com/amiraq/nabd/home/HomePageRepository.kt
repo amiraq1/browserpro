@@ -53,6 +53,15 @@ class HomePageRepository(context: Context) {
         saveQuickLinks(links)
     }
 
+    fun updateQuickLink(id: String, title: String, url: String) {
+        val links = getQuickLinks().toMutableList()
+        val index = links.indexOfFirst { it.id == id }
+        if (index >= 0) {
+            links[index] = links[index].copy(title = title, url = url)
+            saveQuickLinks(links)
+        }
+    }
+
     fun resetDefaultQuickLinks() {
         saveQuickLinks(defaultQuickLinks())
     }
