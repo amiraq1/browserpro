@@ -19,6 +19,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.amiraq.nabd.bookmarks.BookmarkRepository
 import com.amiraq.nabd.downloads.DownloadItem
 import com.amiraq.nabd.downloads.DownloadRepository
@@ -107,6 +108,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var gestureController: com.amiraq.nabd.gestures.BrowserGestureController
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         ThemeManager.applyTheme(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
