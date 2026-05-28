@@ -138,6 +138,14 @@ class SettingsRepository(context: Context) {
     fun isPerformanceModeEnabled(): Boolean = prefs.getBoolean(KEY_PERFORMANCE_MODE, false)
     fun setPerformanceModeEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_PERFORMANCE_MODE, enabled).apply() }
 
+    // ─── Extension Settings ──────────────────────────────────────────────────────
+
+    fun isSummarizerExtensionEnabled(): Boolean = prefs.getBoolean(KEY_SUMMARIZER_EXT, true)
+    fun setSummarizerExtensionEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_SUMMARIZER_EXT, enabled).apply() }
+
+    fun isDarkModeExtensionEnabled(): Boolean = prefs.getBoolean(KEY_DARK_MODE_EXT, false)
+    fun setDarkModeExtensionEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_DARK_MODE_EXT, enabled).apply() }
+
     fun resetToDefaults() {
         prefs.edit()
             .putBoolean(KEY_USE_REMOTE, AppConfig.DEFAULT_USE_REMOTE_SUMMARIZER)
@@ -150,6 +158,8 @@ class SettingsRepository(context: Context) {
             .putBoolean(KEY_CRYPTOMINER_BLOCK, true)
             .putBoolean(KEY_FINGERPRINTER_BLOCK, true)
             .putBoolean(KEY_IMMERSIVE_BROWSING, false)
+            .putBoolean(KEY_SUMMARIZER_EXT, true)
+            .putBoolean(KEY_DARK_MODE_EXT, false)
             .apply()
     }
 
@@ -183,6 +193,8 @@ class SettingsRepository(context: Context) {
         private const val KEY_PULL_REFRESH = "pull_to_refresh_enabled"
         private const val KEY_SESSION_RESTORE = "session_restore_enabled"
         private const val KEY_PERFORMANCE_MODE = "performance_mode"
+        private const val KEY_SUMMARIZER_EXT = "summarizer_extension_enabled"
+        private const val KEY_DARK_MODE_EXT = "dark_mode_extension_enabled"
         private const val DEFAULT_THEME_MODE = "system"
     }
 }

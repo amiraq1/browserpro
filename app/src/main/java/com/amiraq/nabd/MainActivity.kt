@@ -67,10 +67,12 @@ import org.mozilla.geckoview.GeckoView
 import org.mozilla.geckoview.WebExtension
 import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebResponse
+import com.amiraq.nabd.extensions.ExtensionManager
 
 class MainActivity : AppCompatActivity() {
     private lateinit var geckoRuntime: GeckoRuntime
     private lateinit var geckoView: GeckoView
+    private lateinit var extensionManager: ExtensionManager
     private lateinit var urlEditText: TextInputEditText
     private lateinit var goButton: MaterialButton
     private lateinit var summarizeButton: MaterialButton
@@ -125,12 +127,26 @@ class MainActivity : AppCompatActivity() {
         summarizer = SummarizerFactory.create(settingsRepository)
         bindViews()
         setupGeckoRuntime()
+        extensionManager = ExtensionManager(geckoRuntime, settingsRepository)
         setupTabManager()
         setupBrowserControls()
         setupBackNavigation()
+ feature/phases-2-to-16
         installSummarizerExtension()
         // Install other enabled embedded extensions
         com.amiraq.nabd.extensions.ExtensionManager(this, geckoRuntime, settingsRepository).installEnabledExtensions()
+
+        
+        extensionManager.installExtensions { extension ->
+            summarizerExtension = extension
+            extension.setMessageDelegate(createNativeMessageDelegate(), NATIVE_APP_ID)
+            val actionDelegate = createActionDelegate()
+            extension.setActionDelegate(actionDelegate)
+            tabManager.getActiveSession()?.webExtensionController?.setActionDelegate(extension, actionDelegate)
+            Log.d(TAG, "Summarizer extension initialized from ExtensionManager")
+        }
+
+ main
         // Restore session or create first tab
         if (!restoreSavedSession()) {
             val startUrl = preferences.getString(PREF_LAST_URL, DEFAULT_HOME).orEmpty().ifBlank { DEFAULT_HOME }
@@ -194,6 +210,10 @@ class MainActivity : AppCompatActivity() {
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
         browserContentContainer = findViewById(R.id.browserContentContainer)
     }
+ feature/phases-2-to-16
+
+
+ main
     private fun setupGeckoRuntime() {
         try {
             val settings = org.mozilla.geckoview.GeckoRuntimeSettings.Builder()
@@ -206,6 +226,23 @@ class MainActivity : AppCompatActivity() {
             Log.e(TAG, "Failed to create GeckoRuntime", e)
         }
     }
+ feature/phases-2-to-16
+
+
+
+    private fun applySafeAreaInsets() {
+        val start = browserChrome.paddingStart
+        val top = browserChrome.paddingTop
+        val end = browserChrome.paddingEnd
+        val bottom = browserChrome.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(browserChrome) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPaddingRelative(start, top + bars.top, end, bottom)
+            insets
+        }
+        ViewCompat.requestApplyInsets(browserChrome)
+    }
+ main
     private fun setupTabManager() { tabManager = TabManager(geckoRuntime, geckoView) { tab -> if (isWebFullscreen) exitWebFullscreen(); hideFindBarSilently(); if (tab.isHomePage) showHomePage() else hideHomePage(); updateUrlField(tab.url); updateProgressForTab(tab); updateTabCountButton(); reRegisterExtensionDelegateForActiveTab() } }
     private fun setupTabDelegates(tab: BrowserTab) { tab.session.setProgressDelegate(createProgressDelegate(tab)); tab.session.setNavigationDelegate(createNavigationDelegate(tab)); tab.session.setContentDelegate(createContentDelegate()) }
     private fun setupBrowserControls() {
@@ -1041,18 +1078,7 @@ class MainActivity : AppCompatActivity() {
         dialog.window?.setBackgroundDrawable(ColorDrawable(getThemeColor(com.google.android.material.R.attr.colorSurface)))
     }
 
-    private fun installSummarizerExtension() {
-        geckoRuntime.webExtensionController.ensureBuiltIn(EXTENSION_LOCATION, EXTENSION_ID).accept({ extension ->
-            if (extension == null) { Log.e(TAG, "Summarizer extension returned null"); return@accept }
-            summarizerExtension = extension
-            extension.setMessageDelegate(createNativeMessageDelegate(), NATIVE_APP_ID)
-            val actionDelegate = createActionDelegate()
-            extension.setActionDelegate(actionDelegate)
-            tabManager.getActiveSession()?.webExtensionController?.setActionDelegate(extension, actionDelegate)
-            Log.d(TAG, "Summarizer extension installed")
-        }, { throwable -> Log.e(TAG, "Failed to install summarizer extension", throwable) })
-    }
-    private fun reRegisterExtensionDelegateForActiveTab() { val ext = summarizerExtension ?: return; val session = tabManager.getActiveSession() ?: return; try { session.webExtensionController.setActionDelegate(ext, createActionDelegate()) } catch (e: Exception) { Log.e(TAG, "Error re-registering extension delegate", e) } }
+    private fun reRegisterExtensionDelegateForActiveTab() { val ext = extensionManager.getExtension(ExtensionManager.SUMMARIZER_ID) ?: return; val session = tabManager.getActiveSession() ?: return; try { session.webExtensionController.setActionDelegate(ext, createActionDelegate()) } catch (e: Exception) { Log.e(TAG, "Error re-registering extension delegate", e) } }
     private fun createNativeMessageDelegate() = object : WebExtension.MessageDelegate {
         override fun onMessage(nativeApp: String, message: Any, sender: WebExtension.MessageSender): GeckoResult<Any>? {
             if (nativeApp != NATIVE_APP_ID) return errorResult("Unsupported native app: $nativeApp")
@@ -1168,8 +1194,6 @@ class MainActivity : AppCompatActivity() {
         private const val PREFS_NAME = "nabd_preferences"
         private const val PREF_LAST_URL = "last_url"
         private const val DEFAULT_HOME = "https://www.google.com"
-        private const val EXTENSION_LOCATION = "resource://android/assets/summarizer-extension/"
-        private const val EXTENSION_ID = "summarizer@example.com"
         private const val NATIVE_APP_ID = "browser"
     }
 }
