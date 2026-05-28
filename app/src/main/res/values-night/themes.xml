@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Nabd" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/nabd_primary_dark</item>
+        <item name="colorOnPrimary">@color/nabd_on_primary_dark</item>
+        <item name="colorSecondary">@color/nabd_secondary_dark</item>
+        <item name="colorOnSecondary">@color/nabd_on_secondary_dark</item>
+        <item name="android:colorBackground">@color/nabd_surface_dark</item>
+        <item name="colorSurface">@color/nabd_surface_dark</item>
+        <item name="colorOnSurface">@color/nabd_on_surface_dark</item>
+        <item name="colorOutline">@color/nabd_outline_dark</item>
+        <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+</resources>

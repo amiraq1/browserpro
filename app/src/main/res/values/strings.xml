@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">نبض</string>
+    <string name="url_hint">Search or enter address</string>
+    <string name="go">Go</string>
+    <string name="summarize_page">Summarize page</string>
+</resources>
