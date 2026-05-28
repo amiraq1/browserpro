@@ -383,13 +383,25 @@ Available from the ⋮ menu → "Reader Mode":
 - Reader printing uses `PrintedPdfDocument` with Canvas text rendering — no WebView involved.
 - No external services or tracking are used for sharing or printing.
 
+## Modern Homepage
+
+The native new tab homepage provides a clean browser start page without using Android WebView:
+
+- A centered `نبض` title with a large Material search/address bar.
+- Search input reuses the same URL/domain/search-engine logic as the main browser bar.
+- Favorite Sites show default links for Google, YouTube, Wikipedia, and GitHub.
+- Favorite Sites can be added, edited, removed, and opened from Material dialogs.
+- Duplicate favorite URLs are rejected and invalid fields show inline errors.
+- Recently Visited shows the latest history entries and opens them in the active tab.
+- The homepage respects the selected search engine, tab state, and light/dark theme colors.
+
 ## Homepage & New Tab Page
 
 New tabs display a native custom homepage with:
 
 - **App title** (نبض) and search/address input.
-- **Quick Links** — default sites (Google, Wikipedia, YouTube, GitHub) plus user-added links.
-- **Recently Visited** — latest 6 history items for quick access.
+- **Quick Links** — default sites (Google, YouTube, Wikipedia, GitHub) plus user-added links.
+- **Recently Visited** — latest 5 history items for quick access.
 
 **Behavior:**
 - Tap + → custom homepage appears (no page loaded in GeckoView yet).

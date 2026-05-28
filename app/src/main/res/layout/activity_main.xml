@@ -14,117 +14,139 @@
 
         <LinearLayout
             android:id="@+id/browserBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorSurface"
-        android:gravity="center_vertical"
-        android:minHeight="56dp"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingTop="6dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="6dp">
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/urlInputLayout"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="@string/url_hint"
-            app:boxBackgroundColor="?attr/colorSurface"
-            app:boxCornerRadiusBottomEnd="24dp"
-            app:boxCornerRadiusBottomStart="24dp"
-            app:boxCornerRadiusTopEnd="24dp"
-            app:boxCornerRadiusTopStart="24dp"
-            app:boxStrokeColor="?attr/colorOutline"
-            app:hintTextColor="?attr/colorOnSurface">
+            android:background="?attr/colorSurface"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:minHeight="52dp"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="6dp">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/urlEditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:imeOptions="actionGo"
-                android:inputType="textUri|textNoSuggestions"
-                android:maxLines="1"
-                android:singleLine="true"
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/urlInputLayout"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                app:cardBackgroundColor="?attr/colorSurface"
+                app:cardCornerRadius="22dp"
+                app:cardElevation="0dp"
+                app:strokeColor="?attr/colorOutline"
+                app:strokeWidth="1dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/urlEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/transparent"
+                    android:ellipsize="end"
+                    android:gravity="center_vertical|start"
+                    android:hint="@string/url_hint"
+                    android:imeOptions="actionGo"
+                    android:includeFontPadding="false"
+                    android:inputType="textUri|textNoSuggestions"
+                    android:layoutDirection="ltr"
+                    android:maxLines="1"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:selectAllOnFocus="true"
+                    android:singleLine="true"
+                    android:textDirection="ltr"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textColorHint="?attr/colorOnSurfaceVariant"
+                    android:textSize="15sp" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/goButton"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="4dp"
+                android:contentDescription="@string/go"
+                android:minWidth="40dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text=""
+                app:backgroundTint="?attr/colorPrimary"
+                app:cornerRadius="20dp"
+                app:icon="@drawable/ic_go_arrow"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                app:iconTint="?attr/colorOnPrimary" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/tabCountButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="38dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="4dp"
+                android:contentDescription="@string/tabs_button"
+                android:minWidth="38dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text="1"
                 android:textColor="?attr/colorOnSurface"
-                android:textColorHint="?attr/colorOutline" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:textSize="14sp"
+                app:cornerRadius="20dp"
+                app:strokeColor="?attr/colorOutline" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/goButton"
-            style="@style/Widget.Material3.Button"
-            android:layout_width="wrap_content"
-            android:layout_height="44dp"
-            android:layout_marginStart="4dp"
-            android:minWidth="52dp"
-            android:text="@string/go"
-            android:textColor="?attr/colorOnPrimary"
-            app:backgroundTint="?attr/colorPrimary"
-            app:cornerRadius="22dp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/newTabButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="38dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="2dp"
+                android:contentDescription="@string/new_tab"
+                android:minWidth="38dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text=""
+                app:cornerRadius="20dp"
+                app:icon="@drawable/ic_add_24"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                app:iconTint="?attr/colorOnSurfaceVariant" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/tabCountButton"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="4dp"
-            android:contentDescription="@string/tabs_button"
-            android:minWidth="40dp"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp"
-            android:text="1"
-            android:textColor="?attr/colorOnSurface"
-            app:cornerRadius="20dp"
-            app:strokeColor="?attr/colorOutline" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/summarizeButton"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="38dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="2dp"
+                android:contentDescription="@string/summarize_page"
+                android:enabled="false"
+                android:minWidth="38dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text=""
+                app:backgroundTint="?attr/colorSecondary"
+                app:cornerRadius="20dp"
+                app:icon="@drawable/ic_summarize_24"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                app:iconTint="?attr/colorOnSecondary" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/newTabButton"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="36dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="2dp"
-            android:contentDescription="@string/new_tab"
-            android:minWidth="36dp"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp"
-            android:text="+"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="18sp"
-            app:cornerRadius="20dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/summarizeButton"
-            style="@style/Widget.Material3.Button"
-            android:layout_width="36dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="2dp"
-            android:contentDescription="@string/summarize_page"
-            android:enabled="false"
-            android:minWidth="36dp"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp"
-            android:text="Σ"
-            android:textColor="?attr/colorOnSecondary"
-            app:backgroundTint="?attr/colorSecondary"
-            app:cornerRadius="20dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/menuButton"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="36dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="2dp"
-            android:contentDescription="@string/menu_more"
-            android:minWidth="36dp"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp"
-            android:text="⋮"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="20sp"
-            app:cornerRadius="20dp" />
-    </LinearLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/menuButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="38dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="2dp"
+                android:contentDescription="@string/menu_more"
+                android:minWidth="38dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text=""
+                app:cornerRadius="20dp"
+                app:icon="@drawable/ic_more_vert_24"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                app:iconTint="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
 
     <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/pageProgress"
