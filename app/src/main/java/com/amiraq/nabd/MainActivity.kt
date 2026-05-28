@@ -69,10 +69,12 @@ import org.mozilla.geckoview.GeckoView
 import org.mozilla.geckoview.WebExtension
 import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebResponse
+import com.amiraq.nabd.extensions.ExtensionManager
 
 class MainActivity : AppCompatActivity() {
     private lateinit var geckoRuntime: GeckoRuntime
     private lateinit var geckoView: GeckoView
+    private lateinit var extensionManager: ExtensionManager
     private lateinit var urlEditText: TextInputEditText
     private lateinit var goButton: MaterialButton
     private lateinit var summarizeButton: MaterialButton
@@ -128,10 +130,20 @@ class MainActivity : AppCompatActivity() {
         bindViews()
         applySafeAreaInsets()
         setupGeckoRuntime()
+        extensionManager = ExtensionManager(geckoRuntime, settingsRepository)
         setupTabManager()
         setupBrowserControls()
         setupBackNavigation()
-        installSummarizerExtension()
+        
+        extensionManager.installExtensions { extension ->
+            summarizerExtension = extension
+            extension.setMessageDelegate(createNativeMessageDelegate(), NATIVE_APP_ID)
+            val actionDelegate = createActionDelegate()
+            extension.setActionDelegate(actionDelegate)
+            tabManager.getActiveSession()?.webExtensionController?.setActionDelegate(extension, actionDelegate)
+            Log.d(TAG, "Summarizer extension initialized from ExtensionManager")
+        }
+
         // Restore session or create first tab
         if (!restoreSavedSession()) {
             val startUrl = preferences.getString(PREF_LAST_URL, DEFAULT_HOME).orEmpty().ifBlank { DEFAULT_HOME }
@@ -1057,18 +1069,7 @@ class MainActivity : AppCompatActivity() {
         dialog.window?.setBackgroundDrawable(ColorDrawable(getThemeColor(com.google.android.material.R.attr.colorSurface)))
     }
 
-    private fun installSummarizerExtension() {
-        geckoRuntime.webExtensionController.ensureBuiltIn(EXTENSION_LOCATION, EXTENSION_ID).accept({ extension ->
-            if (extension == null) { Log.e(TAG, "Summarizer extension returned null"); return@accept }
-            summarizerExtension = extension
-            extension.setMessageDelegate(createNativeMessageDelegate(), NATIVE_APP_ID)
-            val actionDelegate = createActionDelegate()
-            extension.setActionDelegate(actionDelegate)
-            tabManager.getActiveSession()?.webExtensionController?.setActionDelegate(extension, actionDelegate)
-            Log.d(TAG, "Summarizer extension installed")
-        }, { throwable -> Log.e(TAG, "Failed to install summarizer extension", throwable) })
-    }
-    private fun reRegisterExtensionDelegateForActiveTab() { val ext = summarizerExtension ?: return; val session = tabManager.getActiveSession() ?: return; try { session.webExtensionController.setActionDelegate(ext, createActionDelegate()) } catch (e: Exception) { Log.e(TAG, "Error re-registering extension delegate", e) } }
+    private fun reRegisterExtensionDelegateForActiveTab() { val ext = extensionManager.getExtension(ExtensionManager.SUMMARIZER_ID) ?: return; val session = tabManager.getActiveSession() ?: return; try { session.webExtensionController.setActionDelegate(ext, createActionDelegate()) } catch (e: Exception) { Log.e(TAG, "Error re-registering extension delegate", e) } }
     private fun createNativeMessageDelegate() = object : WebExtension.MessageDelegate {
         override fun onMessage(nativeApp: String, message: Any, sender: WebExtension.MessageSender): GeckoResult<Any>? {
             if (nativeApp != NATIVE_APP_ID) return errorResult("Unsupported native app: $nativeApp")
@@ -1184,8 +1185,6 @@ class MainActivity : AppCompatActivity() {
         private const val PREFS_NAME = "nabd_preferences"
         private const val PREF_LAST_URL = "last_url"
         private const val DEFAULT_HOME = "https://www.google.com"
-        private const val EXTENSION_LOCATION = "resource://android/assets/summarizer-extension/"
-        private const val EXTENSION_ID = "summarizer@example.com"
         private const val NATIVE_APP_ID = "browser"
     }
 }
