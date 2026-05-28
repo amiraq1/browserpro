@@ -98,6 +98,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var homeSearchInput: TextInputEditText
     private lateinit var homeQuickLinksContainer: android.widget.GridLayout
     private lateinit var homeRecentContainer: LinearLayout
+    private lateinit var swipeRefreshLayout: androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    private lateinit var browserContentContainer: android.widget.FrameLayout
+    private lateinit var gestureController: com.amiraq.nabd.gestures.BrowserGestureController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeManager.applyTheme(this)
@@ -129,7 +132,7 @@ class MainActivity : AppCompatActivity() {
         updateTabCountButton()
     }
     override fun onStart() { super.onStart(); tabManager.getActiveSession()?.setActive(true) }
-    override fun onResume() { super.onResume(); if (::settingsRepository.isInitialized) { summarizer = SummarizerFactory.create(settingsRepository); searchEngineManager = SearchEngineManager(settingsRepository); if (::geckoRuntime.isInitialized) PrivacyProtectionManager.applyToRuntime(geckoRuntime.settings, settingsRepository) }; if (!isWebFullscreen) setSystemBarsVisible(true) }
+    override fun onResume() { super.onResume(); if (::settingsRepository.isInitialized) { summarizer = SummarizerFactory.create(settingsRepository); searchEngineManager = SearchEngineManager(settingsRepository); if (::geckoRuntime.isInitialized) PrivacyProtectionManager.applyToRuntime(geckoRuntime.settings, settingsRepository); updateGestureSettings() }; if (!isWebFullscreen) setSystemBarsVisible(true) }
     override fun onStop() { tabManager.getActiveSession()?.setActive(false); super.onStop() }
     override fun onDestroy() {
         dismissExtensionPopup()
@@ -174,6 +177,8 @@ class MainActivity : AppCompatActivity() {
         homeSearchInput = findViewById(R.id.homeSearchInput)
         homeQuickLinksContainer = findViewById(R.id.homeQuickLinksContainer)
         homeRecentContainer = findViewById(R.id.homeRecentContainer)
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
+        browserContentContainer = findViewById(R.id.browserContentContainer)
     }
     private fun setupGeckoRuntime() { try { geckoRuntime = GeckoRuntime.create(this); PrivacyProtectionManager.applyToRuntime(geckoRuntime.settings, settingsRepository) } catch (e: Exception) { Log.e(TAG, "Failed to create GeckoRuntime", e) } }
     private fun setupTabManager() { tabManager = TabManager(geckoRuntime, geckoView) { tab -> if (isWebFullscreen) exitWebFullscreen(); hideFindBarSilently(); if (tab.isHomePage) showHomePage() else hideHomePage(); updateUrlField(tab.url); updateProgressForTab(tab); updateTabCountButton(); reRegisterExtensionDelegateForActiveTab() } }
@@ -202,6 +207,7 @@ class MainActivity : AppCompatActivity() {
             override fun afterTextChanged(s: android.text.Editable?) { performFind(s?.toString().orEmpty()) }
         })
         setupHomeSearchInput()
+        setupGestures()
     }
     private fun setupBackNavigation() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -328,6 +334,58 @@ class MainActivity : AppCompatActivity() {
             val isEnterUp = event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP
             val isGoAction = actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_SEARCH
             if (isEnterUp || isGoAction) { loadFromHomeInput(homeSearchInput.text?.toString().orEmpty()); true } else false
+        }
+    }
+
+    @android.annotation.SuppressLint("ClickableViewAccessibility")
+    private fun setupGestures() {
+        // Edge swipe gestures
+        gestureController = com.amiraq.nabd.gestures.BrowserGestureController(
+            this,
+            onSwipeBack = { navigateBackGesture() },
+            onSwipeForward = { navigateForwardGesture() }
+        )
+        gestureController.isEnabled = settingsRepository.isSwipeNavigationEnabled()
+        browserContentContainer.setOnTouchListener(gestureController)
+
+        // Pull to refresh
+        swipeRefreshLayout.setOnRefreshListener { refreshFromGesture() }
+        swipeRefreshLayout.isEnabled = settingsRepository.isPullToRefreshEnabled()
+        swipeRefreshLayout.setColorSchemeColors(getThemeColor(androidx.appcompat.R.attr.colorPrimary))
+    }
+
+    private fun navigateBackGesture() {
+        if (isWebFullscreen || findBar.visibility == View.VISIBLE) return
+        val tab = tabManager.getActiveTab() ?: return
+        if (tab.isHomePage) return
+        if (tab.canGoBack) tab.session.goBack()
+    }
+
+    private fun navigateForwardGesture() {
+        if (isWebFullscreen || findBar.visibility == View.VISIBLE) return
+        val tab = tabManager.getActiveTab() ?: return
+        if (tab.isHomePage) return
+        if (tab.canGoForward) tab.session.goForward()
+    }
+
+    private fun refreshFromGesture() {
+        val tab = tabManager.getActiveTab()
+        if (tab == null) { swipeRefreshLayout.isRefreshing = false; return }
+        if (tab.isHomePage) {
+            refreshHomePage()
+            swipeRefreshLayout.isRefreshing = false
+        } else {
+            tab.session.reload()
+            // Animation stops when onPageStop fires
+        }
+    }
+
+    private fun updateGestureSettings() {
+        if (::gestureController.isInitialized) {
+            gestureController.isEnabled = settingsRepository.isSwipeNavigationEnabled()
+        }
+        if (::swipeRefreshLayout.isInitialized) {
+            swipeRefreshLayout.isEnabled = settingsRepository.isPullToRefreshEnabled()
         }
     }
 
@@ -809,7 +867,7 @@ class MainActivity : AppCompatActivity() {
     private fun createProgressDelegate(tab: BrowserTab) = object : GeckoSession.ProgressDelegate {
         override fun onPageStart(session: GeckoSession, url: String) { tab.isLoading = true; tab.progress = 0; if (tab.id == tabManager.getActiveTab()?.id) { pageProgress.progress = 0; pageProgress.visibility = View.VISIBLE } }
         override fun onProgressChange(session: GeckoSession, progress: Int) { tab.progress = progress.coerceIn(0, 100); if (tab.id == tabManager.getActiveTab()?.id) { pageProgress.progress = tab.progress; if (tab.progress < 100) pageProgress.visibility = View.VISIBLE } }
-        override fun onPageStop(session: GeckoSession, success: Boolean) { tab.isLoading = false; tab.progress = 100; if (tab.id == tabManager.getActiveTab()?.id) { pageProgress.progress = 100; pageProgress.visibility = View.GONE }; if (success && tab.url.isNotBlank()) recordHistory(tab.title.ifBlank { tab.url }, tab.url); if (!success) Log.e(TAG, "Page failed in tab ${tab.id}") }
+        override fun onPageStop(session: GeckoSession, success: Boolean) { tab.isLoading = false; tab.progress = 100; if (tab.id == tabManager.getActiveTab()?.id) { pageProgress.progress = 100; pageProgress.visibility = View.GONE; swipeRefreshLayout.isRefreshing = false }; if (success && tab.url.isNotBlank()) recordHistory(tab.title.ifBlank { tab.url }, tab.url); if (!success) Log.e(TAG, "Page failed in tab ${tab.id}") }
     }
     private fun createNavigationDelegate(tab: BrowserTab) = object : GeckoSession.NavigationDelegate {
         override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>, hasUserGesture: Boolean) { if (!url.isNullOrBlank()) { tab.url = url; tab.isHomePage = false; if (tab.id == tabManager.getActiveTab()?.id) { hideHomePage(); updateUrlField(url); saveLastUrl(url) } } }

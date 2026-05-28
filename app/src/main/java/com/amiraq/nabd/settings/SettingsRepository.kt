@@ -89,6 +89,14 @@ class SettingsRepository(context: Context) {
     fun getCustomSearchEngineTemplate(): String = prefs.getString(KEY_CUSTOM_SEARCH_TEMPLATE, "https://example.com/search?q=%s") ?: "https://example.com/search?q=%s"
     fun setCustomSearchEngineTemplate(template: String) { prefs.edit().putString(KEY_CUSTOM_SEARCH_TEMPLATE, template).apply() }
 
+    // ─── Gesture Settings ────────────────────────────────────────────────────────
+
+    fun isSwipeNavigationEnabled(): Boolean = prefs.getBoolean(KEY_SWIPE_NAV, true)
+    fun setSwipeNavigationEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_SWIPE_NAV, enabled).apply() }
+
+    fun isPullToRefreshEnabled(): Boolean = prefs.getBoolean(KEY_PULL_REFRESH, true)
+    fun setPullToRefreshEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_PULL_REFRESH, enabled).apply() }
+
     fun resetToDefaults() {
         prefs.edit()
             .putBoolean(KEY_USE_REMOTE, AppConfig.DEFAULT_USE_REMOTE_SUMMARIZER)
@@ -121,6 +129,8 @@ class SettingsRepository(context: Context) {
         private const val KEY_SEARCH_ENGINE_ID = "search_engine_id"
         private const val KEY_CUSTOM_SEARCH_NAME = "custom_search_name"
         private const val KEY_CUSTOM_SEARCH_TEMPLATE = "custom_search_template"
+        private const val KEY_SWIPE_NAV = "swipe_navigation_enabled"
+        private const val KEY_PULL_REFRESH = "pull_to_refresh_enabled"
         private const val DEFAULT_THEME_MODE = "system"
     }
 }

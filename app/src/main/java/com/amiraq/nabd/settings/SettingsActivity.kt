@@ -27,6 +27,8 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var trackerSwitch: MaterialSwitch
     private lateinit var cryptominerSwitch: MaterialSwitch
     private lateinit var fingerprinterSwitch: MaterialSwitch
+    private lateinit var swipeNavSwitch: MaterialSwitch
+    private lateinit var pullRefreshSwitch: MaterialSwitch
     private lateinit var endpointLayout: TextInputLayout
     private lateinit var endpointInput: TextInputEditText
     private lateinit var languageLayout: TextInputLayout
@@ -60,6 +62,8 @@ class SettingsActivity : AppCompatActivity() {
         trackerSwitch = findViewById(R.id.trackerSwitch)
         cryptominerSwitch = findViewById(R.id.cryptominerSwitch)
         fingerprinterSwitch = findViewById(R.id.fingerprinterSwitch)
+        swipeNavSwitch = findViewById(R.id.swipeNavSwitch)
+        pullRefreshSwitch = findViewById(R.id.pullRefreshSwitch)
         remoteSwitch = findViewById(R.id.remoteSwitch)
         endpointLayout = findViewById(R.id.endpointLayout)
         endpointInput = findViewById(R.id.endpointInput)
@@ -86,6 +90,8 @@ class SettingsActivity : AppCompatActivity() {
         trackerSwitch.isChecked = repository.isTrackerProtectionEnabled()
         cryptominerSwitch.isChecked = repository.isCryptominerBlockingEnabled()
         fingerprinterSwitch.isChecked = repository.isFingerprinterBlockingEnabled()
+        swipeNavSwitch.isChecked = repository.isSwipeNavigationEnabled()
+        pullRefreshSwitch.isChecked = repository.isPullToRefreshEnabled()
         updateFieldsEnabled()
         updateThemeButtonLabel()
         updateSearchEngineButtonLabel()
@@ -256,6 +262,8 @@ class SettingsActivity : AppCompatActivity() {
         repository.setTrackerProtectionEnabled(trackerSwitch.isChecked)
         repository.setCryptominerBlockingEnabled(cryptominerSwitch.isChecked)
         repository.setFingerprinterBlockingEnabled(fingerprinterSwitch.isChecked)
+        repository.setSwipeNavigationEnabled(swipeNavSwitch.isChecked)
+        repository.setPullToRefreshEnabled(pullRefreshSwitch.isChecked)
 
         Snackbar.make(saveButton, R.string.settings_saved, Snackbar.LENGTH_SHORT).show()
     }
