@@ -57,6 +57,10 @@ class HomePageRepository(context: Context) {
         saveQuickLinks(defaultQuickLinks())
     }
 
+    fun clearQuickLinks() {
+        prefs.edit().remove(KEY_QUICK_LINKS).apply()
+    }
+
     private fun saveQuickLinks(links: List<HomeQuickLink>) {
         val array = JSONArray()
         for (link in links) {

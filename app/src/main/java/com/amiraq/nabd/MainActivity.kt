@@ -33,6 +33,7 @@ import com.amiraq.nabd.tabs.BrowserTab
 import com.amiraq.nabd.tabs.TabManager
 import com.amiraq.nabd.theme.ThemeManager
 import com.amiraq.nabd.privacy.PrivacyProtectionManager
+import com.amiraq.nabd.privacy.ClearBrowsingDataManager
 import com.amiraq.nabd.reader.ReaderArticleStore
 import com.amiraq.nabd.reader.ReaderExtractor
 import com.amiraq.nabd.reader.ReaderResult
@@ -127,7 +128,24 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() { super.onStart(); tabManager.getActiveSession()?.setActive(true) }
     override fun onResume() { super.onResume(); if (::settingsRepository.isInitialized) { summarizer = SummarizerFactory.create(settingsRepository); if (::geckoRuntime.isInitialized) PrivacyProtectionManager.applyToRuntime(geckoRuntime.settings, settingsRepository) }; if (!isWebFullscreen) setSystemBarsVisible(true) }
     override fun onStop() { tabManager.getActiveSession()?.setActive(false); super.onStop() }
-    override fun onDestroy() { dismissExtensionPopup(); scope.cancel(); tabManager.destroy(); super.onDestroy() }
+    override fun onDestroy() {
+        dismissExtensionPopup()
+        // Clear on exit if enabled
+        if (isFinishing && ::settingsRepository.isInitialized && settingsRepository.isClearOnExitEnabled()) {
+            try {
+                val manager = ClearBrowsingDataManager(this)
+                manager.clear(
+                    clearHistory = true,
+                    clearCookies = true,
+                    clearCache = true,
+                    geckoRuntime = if (::geckoRuntime.isInitialized) geckoRuntime else null
+                )
+            } catch (e: Exception) { Log.e(TAG, "Clear on exit failed", e) }
+        }
+        scope.cancel()
+        tabManager.destroy()
+        super.onDestroy()
+    }
 
     private fun bindViews() {
         geckoView = findViewById(R.id.geckoView)
@@ -194,8 +212,8 @@ class MainActivity : AppCompatActivity() {
         val isBookmarked = bookmarkRepository.isBookmarked(activeUrl)
         val bookmarkLabel = if (isBookmarked) getString(R.string.menu_remove_bookmark) else getString(R.string.menu_add_bookmark)
         val immersiveLabel = if (browserChrome.visibility == View.VISIBLE) getString(R.string.menu_hide_toolbar) else getString(R.string.menu_show_toolbar)
-        val items = arrayOf(bookmarkLabel, getString(R.string.menu_bookmarks), getString(R.string.menu_history), getString(R.string.menu_downloads), getString(R.string.find_in_page), getString(R.string.reader_mode), getString(R.string.menu_share_page), getString(R.string.menu_copy_link), immersiveLabel, getString(R.string.privacy_report_title), getString(R.string.settings_title))
-        MaterialAlertDialogBuilder(this).setItems(items) { _, which -> when (which) { 0 -> toggleBookmark(); 1 -> showBookmarksDialog(); 2 -> showHistoryDialog(); 3 -> startActivity(Intent(this, DownloadsActivity::class.java)); 4 -> showFindBar(); 5 -> openReaderMode(); 6 -> sharePage(); 7 -> copyPageLink(); 8 -> toggleToolbarVisibility(); 9 -> showPrivacyReport(); 10 -> startActivity(Intent(this, SettingsActivity::class.java)) } }.show()
+        val items = arrayOf(bookmarkLabel, getString(R.string.menu_bookmarks), getString(R.string.menu_history), getString(R.string.menu_downloads), getString(R.string.find_in_page), getString(R.string.reader_mode), getString(R.string.menu_share_page), getString(R.string.menu_copy_link), immersiveLabel, getString(R.string.privacy_report_title), getString(R.string.clear_browsing_data), getString(R.string.settings_title))
+        MaterialAlertDialogBuilder(this).setItems(items) { _, which -> when (which) { 0 -> toggleBookmark(); 1 -> showBookmarksDialog(); 2 -> showHistoryDialog(); 3 -> startActivity(Intent(this, DownloadsActivity::class.java)); 4 -> showFindBar(); 5 -> openReaderMode(); 6 -> sharePage(); 7 -> copyPageLink(); 8 -> toggleToolbarVisibility(); 9 -> showPrivacyReport(); 10 -> startActivity(Intent(this, com.amiraq.nabd.privacy.ClearBrowsingDataActivity::class.java)); 11 -> startActivity(Intent(this, SettingsActivity::class.java)) } }.show()
     }
     private fun toggleBookmark() {
         val tab = tabManager.getActiveTab() ?: return

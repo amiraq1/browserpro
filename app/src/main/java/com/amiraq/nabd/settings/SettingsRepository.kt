@@ -75,6 +75,9 @@ class SettingsRepository(context: Context) {
     fun isCustomHomepageEnabled(): Boolean = prefs.getBoolean(KEY_CUSTOM_HOMEPAGE, true)
     fun setCustomHomepageEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_CUSTOM_HOMEPAGE, enabled).apply() }
 
+    fun isClearOnExitEnabled(): Boolean = prefs.getBoolean(KEY_CLEAR_ON_EXIT, false)
+    fun setClearOnExitEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_CLEAR_ON_EXIT, enabled).apply() }
+
     fun resetToDefaults() {
         prefs.edit()
             .putBoolean(KEY_USE_REMOTE, AppConfig.DEFAULT_USE_REMOTE_SUMMARIZER)
@@ -103,6 +106,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_FINGERPRINTER_BLOCK = "fingerprinter_block_enabled"
         private const val KEY_IMMERSIVE_BROWSING = "immersive_browsing"
         private const val KEY_CUSTOM_HOMEPAGE = "custom_homepage"
+        private const val KEY_CLEAR_ON_EXIT = "clear_on_exit"
         private const val DEFAULT_THEME_MODE = "system"
     }
 }
