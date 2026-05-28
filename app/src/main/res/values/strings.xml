@@ -29,8 +29,14 @@
     <string name="download_btn">Download</string>
 
     <!-- Settings -->
-    <string name="settings_title">Settings</string>
-    <string name="setting_theme">Theme</string>
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_header_subtitle">متصفح آمن مع مانع إعلانات</string>
+    <string name="settings_adblock_title">مانع الإعلانات</string>
+    <string name="settings_adblock_desc">تشغيل الحماية من الإعلانات والتتبع</string>
+    <string name="settings_privacy_title">الخصوصية</string>
+    <string name="settings_privacy_info">• لا توجد إعلانات داخل التطبيق\n• لا يتم جمع بيانات المستخدم\n• تعطيل ملفات تعريف ارتباط الطرف الثالث\n• منع النوافذ المنبثقة</string>
+    <string name="settings_appearance_title">المظهر</string>
+    <string name="setting_theme">المظهر</string>
     <string name="theme_system">Follow system</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
@@ -114,8 +120,10 @@
     <string name="setting_swipe_navigation">Swipe back/forward</string>
     <string name="setting_pull_to_refresh">Pull to refresh</string>
     <string name="setting_gestures_section">Navigation Gestures</string>
-    <string name="setting_session_restore">Restore tabs on startup</string>
+    <string name="setting_session_restore">استعادة التبويبات عند البدء</string>
     <string name="setting_session_restore_desc">Reopen your normal tabs when نبض starts.</string>
+    <string name="setting_performance_mode">وضع الأداء السريع</string>
+    <string name="setting_performance_mode_desc">يقلل الفحص البصري لتحسين سرعة فتح المواقع مع إبقاء حظر الإعلانات فعالاً.</string>
     <string name="about_title">About نبض</string>
     <string name="about_subtitle">A GeckoView-powered Android browser</string>
     <string name="about_version_format">Version %1$s (%2$d)</string>

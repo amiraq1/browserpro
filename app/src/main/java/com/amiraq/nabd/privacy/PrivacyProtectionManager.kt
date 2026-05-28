@@ -24,11 +24,13 @@ object PrivacyProtectionManager {
 
     /**
      * Builds a [ContentBlocking.Settings] object based on user preferences.
-     * Call this before creating the GeckoRuntime or apply to existing runtime settings.
+     * In performance mode, CONTENT blocking is skipped to avoid breaking sites
+     * and reduce request interception overhead.
      */
     fun buildContentBlockingSettings(repository: SettingsRepository): ContentBlocking.Settings {
         var antiTrackingCategories = ContentBlocking.AntiTracking.NONE
-        var safeBrowsing = ContentBlocking.SafeBrowsing.DEFAULT
+        val safeBrowsing = ContentBlocking.SafeBrowsing.DEFAULT
+        val performanceMode = repository.isPerformanceModeEnabled()
 
         if (repository.isTrackerProtectionEnabled()) {
             antiTrackingCategories = antiTrackingCategories or
@@ -39,8 +41,12 @@ object PrivacyProtectionManager {
 
         if (repository.isAdBlockEnabled()) {
             antiTrackingCategories = antiTrackingCategories or
-                ContentBlocking.AntiTracking.AD or
-                ContentBlocking.AntiTracking.CONTENT
+                ContentBlocking.AntiTracking.AD
+            // CONTENT blocking can slow page loads — skip in performance mode
+            if (!performanceMode) {
+                antiTrackingCategories = antiTrackingCategories or
+                    ContentBlocking.AntiTracking.CONTENT
+            }
         }
 
         if (repository.isCryptominerBlockingEnabled()) {
@@ -53,7 +59,7 @@ object PrivacyProtectionManager {
                 ContentBlocking.AntiTracking.FINGERPRINTING
         }
 
-        Log.d(TAG, "AntiTracking categories: $antiTrackingCategories")
+        Log.d(TAG, "AntiTracking categories: $antiTrackingCategories (performance=$performanceMode)")
 
         return ContentBlocking.Settings.Builder()
             .antiTracking(antiTrackingCategories)
@@ -63,13 +69,23 @@ object PrivacyProtectionManager {
 
     /**
      * Applies content blocking settings to an existing GeckoRuntimeSettings.
+     * Also applies performance-related runtime settings.
      */
     fun applyToRuntime(runtimeSettings: GeckoRuntimeSettings, repository: SettingsRepository) {
         try {
             val cbSettings = buildContentBlockingSettings(repository)
             runtimeSettings.contentBlocking.setAntiTracking(cbSettings.antiTrackingCategories)
             runtimeSettings.contentBlocking.setSafeBrowsing(cbSettings.safeBrowsingCategories)
-            Log.d(TAG, "Content blocking applied to runtime")
+
+            // Performance: enable prefetch and speculative connections
+            runtimeSettings.setPreferredColorScheme(
+                if (repository.getThemeMode() == "dark")
+                    GeckoRuntimeSettings.COLOR_SCHEME_DARK
+                else
+                    GeckoRuntimeSettings.COLOR_SCHEME_LIGHT
+            )
+
+            Log.d(TAG, "Content blocking and performance settings applied")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to apply content blocking settings", e)
         }

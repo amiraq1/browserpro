@@ -102,6 +102,11 @@ class SettingsRepository(context: Context) {
     fun isSessionRestoreEnabled(): Boolean = prefs.getBoolean(KEY_SESSION_RESTORE, true)
     fun setSessionRestoreEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_SESSION_RESTORE, enabled).apply() }
 
+    // ─── Performance ─────────────────────────────────────────────────────────────
+
+    fun isPerformanceModeEnabled(): Boolean = prefs.getBoolean(KEY_PERFORMANCE_MODE, false)
+    fun setPerformanceModeEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_PERFORMANCE_MODE, enabled).apply() }
+
     fun resetToDefaults() {
         prefs.edit()
             .putBoolean(KEY_USE_REMOTE, AppConfig.DEFAULT_USE_REMOTE_SUMMARIZER)
@@ -137,6 +142,7 @@ class SettingsRepository(context: Context) {
         private const val KEY_SWIPE_NAV = "swipe_navigation_enabled"
         private const val KEY_PULL_REFRESH = "pull_to_refresh_enabled"
         private const val KEY_SESSION_RESTORE = "session_restore_enabled"
+        private const val KEY_PERFORMANCE_MODE = "performance_mode"
         private const val DEFAULT_THEME_MODE = "system"
     }
 }

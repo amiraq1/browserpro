@@ -195,6 +195,20 @@ class MainActivity : AppCompatActivity() {
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
         browserContentContainer = findViewById(R.id.browserContentContainer)
     }
+ feature/phases-2-to-16
+    private fun setupGeckoRuntime() {
+        try {
+            val settings = org.mozilla.geckoview.GeckoRuntimeSettings.Builder()
+                .consoleOutput(false)
+                .contentBlocking(PrivacyProtectionManager.buildContentBlockingSettings(settingsRepository))
+                .build()
+            geckoRuntime = GeckoRuntime.create(this, settings)
+            PrivacyProtectionManager.applyToRuntime(geckoRuntime.settings, settingsRepository)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to create GeckoRuntime", e)
+        }
+    }
+
 
     private fun applySafeAreaInsets() {
         val start = browserChrome.paddingStart
@@ -210,6 +224,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupGeckoRuntime() { try { geckoRuntime = GeckoRuntime.create(this); PrivacyProtectionManager.applyToRuntime(geckoRuntime.settings, settingsRepository) } catch (e: Exception) { Log.e(TAG, "Failed to create GeckoRuntime", e) } }
+  main
     private fun setupTabManager() { tabManager = TabManager(geckoRuntime, geckoView) { tab -> if (isWebFullscreen) exitWebFullscreen(); hideFindBarSilently(); if (tab.isHomePage) showHomePage() else hideHomePage(); updateUrlField(tab.url); updateProgressForTab(tab); updateTabCountButton(); reRegisterExtensionDelegateForActiveTab() } }
     private fun setupTabDelegates(tab: BrowserTab) { tab.session.setProgressDelegate(createProgressDelegate(tab)); tab.session.setNavigationDelegate(createNavigationDelegate(tab)); tab.session.setContentDelegate(createContentDelegate()) }
     private fun setupBrowserControls() {
