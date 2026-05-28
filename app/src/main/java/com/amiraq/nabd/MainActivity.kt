@@ -20,8 +20,6 @@ import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.amiraq.nabd.bookmarks.BookmarkRepository
 import com.amiraq.nabd.downloads.DownloadItem
 import com.amiraq.nabd.downloads.DownloadRepository
@@ -128,12 +126,16 @@ class MainActivity : AppCompatActivity() {
         sessionRepository = SessionRepository(this)
         summarizer = SummarizerFactory.create(settingsRepository)
         bindViews()
-        applySafeAreaInsets()
         setupGeckoRuntime()
         extensionManager = ExtensionManager(geckoRuntime, settingsRepository)
         setupTabManager()
         setupBrowserControls()
         setupBackNavigation()
+ feature/phases-2-to-16
+        installSummarizerExtension()
+        // Install other enabled embedded extensions
+        com.amiraq.nabd.extensions.ExtensionManager(this, geckoRuntime, settingsRepository).installEnabledExtensions()
+
         
         extensionManager.installExtensions { extension ->
             summarizerExtension = extension
@@ -144,6 +146,7 @@ class MainActivity : AppCompatActivity() {
             Log.d(TAG, "Summarizer extension initialized from ExtensionManager")
         }
 
+ main
         // Restore session or create first tab
         if (!restoreSavedSession()) {
             val startUrl = preferences.getString(PREF_LAST_URL, DEFAULT_HOME).orEmpty().ifBlank { DEFAULT_HOME }
@@ -207,7 +210,10 @@ class MainActivity : AppCompatActivity() {
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
         browserContentContainer = findViewById(R.id.browserContentContainer)
     }
+ feature/phases-2-to-16
 
+
+ main
     private fun setupGeckoRuntime() {
         try {
             val settings = org.mozilla.geckoview.GeckoRuntimeSettings.Builder()
@@ -220,6 +226,8 @@ class MainActivity : AppCompatActivity() {
             Log.e(TAG, "Failed to create GeckoRuntime", e)
         }
     }
+ feature/phases-2-to-16
+
 
 
     private fun applySafeAreaInsets() {
@@ -234,6 +242,7 @@ class MainActivity : AppCompatActivity() {
         }
         ViewCompat.requestApplyInsets(browserChrome)
     }
+ main
     private fun setupTabManager() { tabManager = TabManager(geckoRuntime, geckoView) { tab -> if (isWebFullscreen) exitWebFullscreen(); hideFindBarSilently(); if (tab.isHomePage) showHomePage() else hideHomePage(); updateUrlField(tab.url); updateProgressForTab(tab); updateTabCountButton(); reRegisterExtensionDelegateForActiveTab() } }
     private fun setupTabDelegates(tab: BrowserTab) { tab.session.setProgressDelegate(createProgressDelegate(tab)); tab.session.setNavigationDelegate(createNavigationDelegate(tab)); tab.session.setContentDelegate(createContentDelegate()) }
     private fun setupBrowserControls() {
@@ -279,8 +288,8 @@ class MainActivity : AppCompatActivity() {
         val bookmarkLabel = if (isBookmarked) getString(R.string.menu_remove_bookmark) else getString(R.string.menu_add_bookmark)
         val immersiveLabel = if (browserChrome.visibility == View.VISIBLE) getString(R.string.menu_hide_toolbar) else getString(R.string.menu_show_toolbar)
         val desktopLabel = if (tabManager.getActiveTab()?.isDesktopMode == true) getString(R.string.menu_desktop_on) else getString(R.string.menu_desktop_off)
-        val items = arrayOf(bookmarkLabel, getString(R.string.menu_bookmarks), getString(R.string.menu_history), getString(R.string.menu_downloads), getString(R.string.find_in_page), getString(R.string.reader_mode), getString(R.string.menu_share_page), getString(R.string.menu_copy_link), getString(R.string.menu_new_private_tab), desktopLabel, immersiveLabel, getString(R.string.privacy_report_title), getString(R.string.clear_browsing_data), getString(R.string.settings_title), getString(R.string.about_title))
-        MaterialAlertDialogBuilder(this).setItems(items) { _, which -> when (which) { 0 -> toggleBookmark(); 1 -> showBookmarksDialog(); 2 -> showHistoryDialog(); 3 -> startActivity(Intent(this, DownloadsActivity::class.java)); 4 -> showFindBar(); 5 -> openReaderMode(); 6 -> sharePage(); 7 -> copyPageLink(); 8 -> openNewPrivateTab(); 9 -> toggleDesktopMode(); 10 -> toggleToolbarVisibility(); 11 -> showPrivacyReport(); 12 -> startActivity(Intent(this, com.amiraq.nabd.privacy.ClearBrowsingDataActivity::class.java)); 13 -> startActivity(Intent(this, SettingsActivity::class.java)); 14 -> startActivity(Intent(this, com.amiraq.nabd.about.AboutActivity::class.java)) } }.show()
+        val items = arrayOf(bookmarkLabel, getString(R.string.menu_bookmarks), getString(R.string.menu_history), getString(R.string.menu_downloads), getString(R.string.find_in_page), getString(R.string.reader_mode), getString(R.string.menu_share_page), getString(R.string.menu_copy_link), getString(R.string.menu_new_private_tab), desktopLabel, immersiveLabel, getString(R.string.privacy_report_title), getString(R.string.agent_control_title), getString(R.string.clear_browsing_data), getString(R.string.settings_title), getString(R.string.about_title))
+        MaterialAlertDialogBuilder(this).setItems(items) { _, which -> when (which) { 0 -> toggleBookmark(); 1 -> showBookmarksDialog(); 2 -> showHistoryDialog(); 3 -> startActivity(Intent(this, DownloadsActivity::class.java)); 4 -> showFindBar(); 5 -> openReaderMode(); 6 -> sharePage(); 7 -> copyPageLink(); 8 -> openNewPrivateTab(); 9 -> toggleDesktopMode(); 10 -> toggleToolbarVisibility(); 11 -> showPrivacyReport(); 12 -> startActivity(Intent(this, com.amiraq.nabd.agent.AgentControlActivity::class.java)); 13 -> startActivity(Intent(this, com.amiraq.nabd.privacy.ClearBrowsingDataActivity::class.java)); 14 -> startActivity(Intent(this, SettingsActivity::class.java)); 15 -> startActivity(Intent(this, com.amiraq.nabd.about.AboutActivity::class.java)) } }.show()
     }
     private fun toggleBookmark() {
         val tab = tabManager.getActiveTab() ?: return
