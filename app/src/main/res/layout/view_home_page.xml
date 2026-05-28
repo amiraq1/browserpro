@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/homePageContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurface"
+    android:clipToPadding="false"
     android:fillViewport="true"
     android:visibility="gone">
 
@@ -14,77 +15,66 @@
         android:gravity="center_horizontal"
         android:orientation="vertical"
         android:paddingStart="20dp"
-        android:paddingTop="64dp"
+        android:paddingTop="40dp"
         android:paddingEnd="20dp"
         android:paddingBottom="32dp">
 
-        <!-- App Title — Arabic-friendly large display -->
         <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/homeTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-medium"
             android:text="@string/app_name"
             android:textColor="?attr/colorPrimary"
-            android:textSize="38sp" />
+            android:textSize="34sp" />
 
         <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/homeSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:text="@string/home_subtitle"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant" />
 
-        <!-- Search Bar — elevated card with large rounded corners -->
-        <com.google.android.material.card.MaterialCardView
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/homeSearchLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:hint="@string/url_hint"
+            app:boxBackgroundColor="?attr/colorSurface"
+            app:boxCornerRadiusBottomEnd="28dp"
+            app:boxCornerRadiusBottomStart="28dp"
+            app:boxCornerRadiusTopEnd="28dp"
+            app:boxCornerRadiusTopStart="28dp"
+            app:boxStrokeColor="?attr/colorOutline"
+            app:hintTextColor="?attr/colorOnSurfaceVariant"
+            app:startIconContentDescription="@string/find_hint"
+            app:startIconDrawable="@drawable/ic_search_24"
+            app:startIconTint="?attr/colorOnSurfaceVariant">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/homeSearchInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/url_hint"
+                android:imeOptions="actionGo"
+                android:inputType="textUri|textNoSuggestions"
+                android:maxLines="1"
+                android:minHeight="58dp"
+                android:singleLine="true"
+                android:textColor="?attr/colorOnSurface"
+                android:textColorHint="?attr/colorOnSurfaceVariant"
+                android:textSize="16sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/homeFavoritesTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            app:cardCornerRadius="28dp"
-            app:cardElevation="6dp"
-            app:strokeWidth="0dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="20dp"
-                android:paddingEnd="12dp">
-
-                <!-- Search icon placeholder -->
-                <com.google.android.material.textview.MaterialTextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🔍"
-                    android:textSize="18sp" />
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/homeSearchInput"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="1"
-                    android:background="@android:color/transparent"
-                    android:contentDescription="@string/url_hint"
-                    android:hint="@string/url_hint"
-                    android:imeOptions="actionGo"
-                    android:inputType="textUri|textNoSuggestions"
-                    android:maxLines="1"
-                    android:paddingTop="18dp"
-                    android:paddingBottom="18dp"
-                    android:singleLine="true"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textColorHint="?attr/colorOnSurfaceVariant"
-                    android:textSize="16sp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Favorite Sites Section -->
-        <com.google.android.material.textview.MaterialTextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="36dp"
             android:text="@string/home_quick_links"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             android:textColor="?attr/colorOnSurface" />
@@ -93,16 +83,16 @@
             android:id="@+id/homeQuickLinksContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:columnCount="4"
+            android:layoutDirection="ltr"
+            android:layout_marginTop="12dp"
+            android:columnCount="2"
             android:useDefaultMargins="false" />
 
-        <!-- Recently Visited Section -->
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/homeRecentTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="28dp"
             android:text="@string/home_recently_visited"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             android:textColor="?attr/colorOnSurface" />
@@ -112,8 +102,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:divider="@null"
             android:orientation="vertical"
             android:showDividers="none" />
     </LinearLayout>
-</ScrollView>
+</androidx.core.widget.NestedScrollView>

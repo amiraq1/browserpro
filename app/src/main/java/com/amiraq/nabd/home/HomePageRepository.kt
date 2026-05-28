@@ -85,8 +85,8 @@ class HomePageRepository(context: Context) {
 
     private fun defaultQuickLinks(): List<HomeQuickLink> = listOf(
         HomeQuickLink(title = "Google", url = "https://www.google.com"),
-        HomeQuickLink(title = "Wikipedia", url = "https://www.wikipedia.org"),
         HomeQuickLink(title = "YouTube", url = "https://www.youtube.com"),
+        HomeQuickLink(title = "Wikipedia", url = "https://www.wikipedia.org"),
         HomeQuickLink(title = "GitHub", url = "https://github.com")
     )
 
