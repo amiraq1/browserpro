@@ -20,6 +20,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="com.amiraq.nabd.settings.SettingsActivity"
+            android:exported="false" />
+        <activity
+            android:name="com.amiraq.nabd.downloads.DownloadsActivity"
+            android:exported="false" />
+        <activity
+            android:name="com.amiraq.nabd.reader.ReaderActivity"
+            android:exported="false" />
+        <receiver
+            android:name="com.amiraq.nabd.downloads.DownloadCompleteReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.DOWNLOAD_COMPLETE" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

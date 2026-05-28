@@ -1,83 +1,79 @@
-const NATIVE_APP_ID = "browser";
+// Popup script for Web Page Summarizer extension.
+// Extracts page text via content script, then sends it to the Android app
+// through browser.runtime.sendNativeMessage for summarization.
 
-const summarizeButton = document.getElementById("summarizeButton");
-const loading = document.getElementById("loading");
-const result = document.getElementById("result");
-const error = document.getElementById("error");
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("summarizeBtn");
+  const status = document.getElementById("status");
+  const result = document.getElementById("result");
+  const error = document.getElementById("error");
 
-summarizeButton.addEventListener("click", summarizePage);
+  btn.addEventListener("click", async () => {
+    // Clear previous output
+    result.style.display = "none";
+    result.textContent = "";
+    error.style.display = "none";
+    error.textContent = "";
+    status.textContent = "Extracting page text...";
 
-async function summarizePage() {
-  setBusy(true);
-  showResult("");
-  showError("");
+    try {
+      // 1. Get the active tab
+      const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+      if (!tabs || tabs.length === 0) {
+        showError("No active tab found.");
+        return;
+      }
+      const tab = tabs[0];
 
-  try {
-    const tab = await getActiveTab();
-    const pageText = await getPageText(tab.id);
-    const response = await browser.runtime.sendNativeMessage(NATIVE_APP_ID, {
-      type: "summarize",
-      text: pageText
-    });
+      // 2. Ask content script to extract page text
+      let extraction;
+      try {
+        extraction = await browser.tabs.sendMessage(tab.id, { type: "extractText" });
+      } catch (e) {
+        showError("Could not reach content script. Try reloading the page.");
+        return;
+      }
 
-    if (!response || response.ok !== true) {
-      throw new Error(response && response.error ? response.error : "Native message failed.");
+      if (!extraction || !extraction.ok) {
+        showError(extraction ? extraction.error : "Content script returned no data.");
+        return;
+      }
+
+      const pageText = extraction.text || "";
+      if (pageText.trim().length === 0) {
+        showError("Page has no text content to summarize.");
+        return;
+      }
+
+      // 3. Send text to Android native app for summarization
+      status.textContent = "Summarizing...";
+      let response;
+      try {
+        response = await browser.runtime.sendNativeMessage("browser", {
+          type: "summarize",
+          text: pageText
+        });
+      } catch (e) {
+        showError("Native messaging failed: " + e.message);
+        return;
+      }
+
+      // 4. Display result
+      if (response && response.ok) {
+        status.textContent = "";
+        result.textContent = response.summary;
+        result.style.display = "block";
+      } else {
+        showError(response ? response.error : "Invalid response from native app.");
+      }
+    } catch (e) {
+      showError("Unexpected error: " + e.message);
     }
-
-    showResult(response.summary || "");
-  } catch (exception) {
-    showError(exception && exception.message ? exception.message : String(exception));
-  } finally {
-    setBusy(false);
-  }
-}
-
-async function getActiveTab() {
-  const tabs = await browser.tabs.query({
-    active: true,
-    currentWindow: true
   });
 
-  if (!tabs || tabs.length === 0 || typeof tabs[0].id !== "number") {
-    throw new Error("No active tab is available.");
+  function showError(msg) {
+    status.textContent = "";
+    error.textContent = msg;
+    error.style.display = "block";
   }
-
-  return tabs[0];
-}
-
-async function getPageText(tabId) {
-  let response;
-  try {
-    response = await browser.tabs.sendMessage(tabId, {
-      type: "extractPageText"
-    });
-  } catch (exception) {
-    throw new Error("Could not reach the page content script.");
-  }
-
-  if (!response || response.ok !== true) {
-    throw new Error(response && response.error ? response.error : "Could not extract page text.");
-  }
-
-  const text = (response.text || "").trim();
-  if (!text) {
-    throw new Error("The page text is empty.");
-  }
-
-  return text;
-}
-
-function setBusy(isBusy) {
-  summarizeButton.disabled = isBusy;
-  loading.hidden = !isBusy;
-}
-
-function showResult(message) {
-  result.textContent = message;
-  result.hidden = !message;
-}
-
-function showError(message) {
-  error.textContent = message;
-  error.hidden = !message;
-}
+});

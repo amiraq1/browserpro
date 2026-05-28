@@ -18,4 +18,13 @@
     <color name="nabd_on_surface_dark">#E0E3E3</color>
     <color name="nabd_outline">#707878</color>
     <color name="nabd_outline_dark">#8A9292</color>
+
+    <color name="nabd_error">#BA1A1A</color>
+    <color name="nabd_on_error">#FFFFFF</color>
+    <color name="nabd_error_dark">#FFB4AB</color>
+    <color name="nabd_on_error_dark">#690005</color>
+    <color name="nabd_surface_variant">#DAE5E5</color>
+    <color name="nabd_surface_variant_dark">#3F4949</color>
+    <color name="nabd_on_surface_variant">#3F4949</color>
+    <color name="nabd_on_surface_variant_dark">#BEC9C9</color>
 </resources>
