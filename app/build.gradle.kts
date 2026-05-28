@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.amiraq.nabd"
-    compileSdk = 35
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.amiraq.nabd"
         minSdk = 23
-        targetSdk = 35
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0.0"
     }
@@ -31,8 +31,8 @@ android {
 
 dependencies {
     implementation("org.mozilla.geckoview:geckoview:126.0.20240526221752")
-    implementation("com.google.android.material:material:1.14.0")
-    implementation("androidx.appcompat:appcompat:1.7.1")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
