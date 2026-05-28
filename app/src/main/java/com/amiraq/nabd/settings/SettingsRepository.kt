@@ -78,6 +78,17 @@ class SettingsRepository(context: Context) {
     fun isClearOnExitEnabled(): Boolean = prefs.getBoolean(KEY_CLEAR_ON_EXIT, false)
     fun setClearOnExitEnabled(enabled: Boolean) { prefs.edit().putBoolean(KEY_CLEAR_ON_EXIT, enabled).apply() }
 
+    // ─── Search Engine Settings ──────────────────────────────────────────────────
+
+    fun getSearchEngineId(): String = prefs.getString(KEY_SEARCH_ENGINE_ID, "google") ?: "google"
+    fun setSearchEngineId(id: String) { prefs.edit().putString(KEY_SEARCH_ENGINE_ID, id).apply() }
+
+    fun getCustomSearchEngineName(): String = prefs.getString(KEY_CUSTOM_SEARCH_NAME, "Custom") ?: "Custom"
+    fun setCustomSearchEngineName(name: String) { prefs.edit().putString(KEY_CUSTOM_SEARCH_NAME, name).apply() }
+
+    fun getCustomSearchEngineTemplate(): String = prefs.getString(KEY_CUSTOM_SEARCH_TEMPLATE, "https://example.com/search?q=%s") ?: "https://example.com/search?q=%s"
+    fun setCustomSearchEngineTemplate(template: String) { prefs.edit().putString(KEY_CUSTOM_SEARCH_TEMPLATE, template).apply() }
+
     fun resetToDefaults() {
         prefs.edit()
             .putBoolean(KEY_USE_REMOTE, AppConfig.DEFAULT_USE_REMOTE_SUMMARIZER)
@@ -107,6 +118,9 @@ class SettingsRepository(context: Context) {
         private const val KEY_IMMERSIVE_BROWSING = "immersive_browsing"
         private const val KEY_CUSTOM_HOMEPAGE = "custom_homepage"
         private const val KEY_CLEAR_ON_EXIT = "clear_on_exit"
+        private const val KEY_SEARCH_ENGINE_ID = "search_engine_id"
+        private const val KEY_CUSTOM_SEARCH_NAME = "custom_search_name"
+        private const val KEY_CUSTOM_SEARCH_TEMPLATE = "custom_search_template"
         private const val DEFAULT_THEME_MODE = "system"
     }
 }

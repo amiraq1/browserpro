@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.amiraq.nabd.R
+import com.amiraq.nabd.search.SearchEngineManager
+import com.amiraq.nabd.search.SearchEngines
 import com.amiraq.nabd.theme.ThemeManager
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
@@ -19,6 +21,7 @@ class SettingsActivity : AppCompatActivity() {
 
     private lateinit var toolbar: MaterialToolbar
     private lateinit var themeButton: MaterialButton
+    private lateinit var searchEngineButton: MaterialButton
     private lateinit var remoteSwitch: MaterialSwitch
     private lateinit var adBlockSwitch: MaterialSwitch
     private lateinit var trackerSwitch: MaterialSwitch
@@ -52,6 +55,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun bindViews() {
         toolbar = findViewById(R.id.settingsToolbar)
         themeButton = findViewById(R.id.themeButton)
+        searchEngineButton = findViewById(R.id.searchEngineButton)
         adBlockSwitch = findViewById(R.id.adBlockSwitch)
         trackerSwitch = findViewById(R.id.trackerSwitch)
         cryptominerSwitch = findViewById(R.id.cryptominerSwitch)
@@ -84,6 +88,7 @@ class SettingsActivity : AppCompatActivity() {
         fingerprinterSwitch.isChecked = repository.isFingerprinterBlockingEnabled()
         updateFieldsEnabled()
         updateThemeButtonLabel()
+        updateSearchEngineButtonLabel()
     }
 
     private fun setupListeners() {
@@ -92,6 +97,7 @@ class SettingsActivity : AppCompatActivity() {
             clearErrors()
         }
         themeButton.setOnClickListener { showThemeChooser() }
+        searchEngineButton.setOnClickListener { showSearchEngineChooser() }
         saveButton.setOnClickListener { saveSettings() }
         resetButton.setOnClickListener { resetSettings() }
     }
@@ -135,6 +141,82 @@ class SettingsActivity : AppCompatActivity() {
             }
             .show()
     }
+
+    private fun updateSearchEngineButtonLabel() {
+        val mgr = SearchEngineManager(repository)
+        searchEngineButton.text = mgr.getCurrentSearchEngine().name
+    }
+
+    private fun showSearchEngineChooser() {
+        val engines = SearchEngines.getBuiltInEngines()
+        val names = engines.map { it.name }.toMutableList()
+        names.add(getString(R.string.search_engine_custom))
+        val ids = engines.map { it.id }.toMutableList()
+        ids.add(SearchEngines.ID_CUSTOM)
+
+        val current = repository.getSearchEngineId()
+        val checkedIndex = ids.indexOf(current).coerceAtLeast(0)
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.setting_search_engine)
+            .setSingleChoiceItems(names.toTypedArray(), checkedIndex) { dialog, which ->
+                val selectedId = ids[which]
+                if (selectedId == SearchEngines.ID_CUSTOM) {
+                    dialog.dismiss()
+                    showCustomSearchEngineDialog()
+                } else {
+                    repository.setSearchEngineId(selectedId)
+                    updateSearchEngineButtonLabel()
+                    Snackbar.make(searchEngineButton, R.string.search_engine_updated, Snackbar.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                }
+            }
+            .show()
+    }
+
+    private fun showCustomSearchEngineDialog() {
+        val currentName = repository.getCustomSearchEngineName()
+        val currentTemplate = repository.getCustomSearchEngineTemplate()
+
+        val layout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(dp(24), dp(16), dp(24), dp(8))
+        }
+        val nameInput = com.google.android.material.textfield.TextInputEditText(this).apply {
+            hint = getString(R.string.search_engine_name_hint)
+            setText(currentName)
+        }
+        val templateInput = com.google.android.material.textfield.TextInputEditText(this).apply {
+            hint = getString(R.string.search_engine_template_hint)
+            setText(currentTemplate)
+        }
+        layout.addView(nameInput)
+        layout.addView(templateInput)
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.search_engine_custom)
+            .setView(layout)
+            .setPositiveButton(R.string.setting_save) { _, _ ->
+                val name = nameInput.text?.toString().orEmpty().trim()
+                val template = templateInput.text?.toString().orEmpty().trim()
+                val mgr = SearchEngineManager(repository)
+                if (name.isBlank()) {
+                    Snackbar.make(searchEngineButton, R.string.search_engine_name_required, Snackbar.LENGTH_SHORT).show()
+                } else if (!mgr.isValidCustomTemplate(template)) {
+                    Snackbar.make(searchEngineButton, R.string.search_engine_template_invalid, Snackbar.LENGTH_SHORT).show()
+                } else {
+                    repository.setSearchEngineId(SearchEngines.ID_CUSTOM)
+                    repository.setCustomSearchEngineName(name)
+                    repository.setCustomSearchEngineTemplate(template)
+                    updateSearchEngineButtonLabel()
+                    Snackbar.make(searchEngineButton, R.string.search_engine_updated, Snackbar.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     private fun saveSettings() {
         clearErrors()

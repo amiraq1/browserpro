@@ -37,6 +37,7 @@ import com.amiraq.nabd.privacy.ClearBrowsingDataManager
 import com.amiraq.nabd.reader.ReaderArticleStore
 import com.amiraq.nabd.reader.ReaderExtractor
 import com.amiraq.nabd.reader.ReaderResult
+import com.amiraq.nabd.search.SearchEngineManager
 import com.amiraq.nabd.share.ShareUtils
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -85,6 +86,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var historyRepository: HistoryRepository
     private lateinit var downloadRepository: DownloadRepository
     private lateinit var homePageRepository: com.amiraq.nabd.home.HomePageRepository
+    private lateinit var searchEngineManager: SearchEngineManager
     private lateinit var summarizer: Summarizer
     private lateinit var preferences: SharedPreferences
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -107,6 +109,7 @@ class MainActivity : AppCompatActivity() {
         historyRepository = HistoryRepository(this)
         downloadRepository = DownloadRepository(this)
         homePageRepository = com.amiraq.nabd.home.HomePageRepository(this)
+        searchEngineManager = SearchEngineManager(settingsRepository)
         summarizer = SummarizerFactory.create(settingsRepository)
         bindViews()
         setupGeckoRuntime()
@@ -126,7 +129,7 @@ class MainActivity : AppCompatActivity() {
         updateTabCountButton()
     }
     override fun onStart() { super.onStart(); tabManager.getActiveSession()?.setActive(true) }
-    override fun onResume() { super.onResume(); if (::settingsRepository.isInitialized) { summarizer = SummarizerFactory.create(settingsRepository); if (::geckoRuntime.isInitialized) PrivacyProtectionManager.applyToRuntime(geckoRuntime.settings, settingsRepository) }; if (!isWebFullscreen) setSystemBarsVisible(true) }
+    override fun onResume() { super.onResume(); if (::settingsRepository.isInitialized) { summarizer = SummarizerFactory.create(settingsRepository); searchEngineManager = SearchEngineManager(settingsRepository); if (::geckoRuntime.isInitialized) PrivacyProtectionManager.applyToRuntime(geckoRuntime.settings, settingsRepository) }; if (!isWebFullscreen) setSystemBarsVisible(true) }
     override fun onStop() { tabManager.getActiveSession()?.setActive(false); super.onStop() }
     override fun onDestroy() {
         dismissExtensionPopup()
@@ -649,7 +652,7 @@ class MainActivity : AppCompatActivity() {
         val input = rawInput.trim(); if (input.isBlank()) return ""
         if (input.startsWith("http://", true) || input.startsWith("https://", true)) return input
         if (looksLikeDomain(input)) return "https://$input"
-        return "https://www.google.com/search?q=${URLEncoder.encode(input, Charsets.UTF_8.name())}"
+        return searchEngineManager.buildSearchUrl(input)
     }
     private fun looksLikeDomain(input: String): Boolean { if (input.any { it.isWhitespace() }) return false; return Regex("^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+(?::\\d{1,5})?(?:/.*)?$").matches(input) }
     private fun updateUrlField(url: String) { if (urlEditText.text?.toString() == url) return; urlEditText.setText(url); urlEditText.setSelection(urlEditText.text?.length ?: 0) }
