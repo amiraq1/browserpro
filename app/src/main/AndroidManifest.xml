@@ -32,6 +32,9 @@
         <activity
             android:name="com.amiraq.nabd.privacy.ClearBrowsingDataActivity"
             android:exported="false" />
+        <activity
+            android:name="com.amiraq.nabd.about.AboutActivity"
+            android:exported="false" />
         <receiver
             android:name="com.amiraq.nabd.downloads.DownloadCompleteReceiver"
             android:exported="false">
