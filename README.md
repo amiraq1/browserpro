@@ -4,7 +4,31 @@
 
 ## Why GeckoView
 
-This app intentionally does not use Android WebView. GeckoView bundles Mozilla's browser engine directly into the app, which gives the project a Firefox-compatible rendering engine and WebExtension support without depending on the device WebView provider.
+This app intentionally does **not** use Android WebView. GeckoView bundles Mozilla's browser engine (Gecko) directly into the app, which gives the project a Firefox-compatible rendering engine and WebExtension support without depending on the device WebView provider.
+
+**Key differences from WebView:**
+- GeckoView is a full browser engine (same as Firefox), not a system component.
+- Settings like `domStorageEnabled`, `cacheMode`, `databaseEnabled` are WebView-specific and do not apply here.
+- GeckoView manages its own cache, cookies, and storage automatically.
+- Content blocking uses `ContentBlocking.AntiTracking` categories on `GeckoRuntimeSettings`.
+- Performance tuning is done via `GeckoRuntimeSettings.Builder()` at runtime creation.
+
+## Performance Modes
+
+The app offers two protection levels that affect page loading speed:
+
+| Mode | Description | Speed | Protection |
+|------|-------------|-------|------------|
+| **Full Protection** (default) | Blocks ads, trackers, social, content trackers, cryptominers, fingerprinters | Normal | Maximum |
+| **Performance Mode** | Skips `CONTENT` blocking category to avoid breaking third-party resources | Faster | High (ads/trackers/crypto/fingerprinting still blocked) |
+
+**How it works:**
+- `ContentBlocking.AntiTracking.CONTENT` blocks all third-party content from known tracking domains. This is thorough but can slow page loads and break some sites.
+- Performance Mode disables only this aggressive category while keeping all other protections active.
+- The setting is persisted in SharedPreferences and applied on every app launch and when returning from Settings.
+- No session recreation is needed — GeckoView applies `ContentBlocking` changes to the runtime immediately.
+
+**To enable:** Settings → "وضع الأداء السريع" (Performance Mode) → Save.
 
 ## Features
 
@@ -276,6 +300,22 @@ The app includes built-in privacy protection powered by GeckoView's Enhanced Tra
 - Settings are applied at runtime startup and refreshed when returning from Settings.
 - Protection does not interfere with the summarizer extension or downloads.
 - Future improvements may include per-site allowlists and custom filter lists.
+
+## Embedded Extensions
+
+The browser supports optional embedded WebExtensions loaded from APK assets:
+
+| Extension | Status | License | Description |
+|-----------|--------|---------|-------------|
+| Web Page Summarizer | Active | Built-in | Extracts and summarizes page content via native messaging |
+| SponsorBlock | Pending | GPL-3.0 | Skips sponsor segments on YouTube (requires built extension files) |
+
+**SponsorBlock integration:**
+- Toggle available in Settings (disabled by default).
+- Extension files must be placed in `assets/extensions/sponsorblock/` to activate.
+- If files are missing, the app logs a warning and continues normally — no crash.
+- SponsorBlock is open source (GPL-3.0): https://github.com/ajayyy/SponsorBlock
+- If bundled in a release, GPL-3.0 license terms apply to the extension files.
 
 ## Next Steps
 

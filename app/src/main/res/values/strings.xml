@@ -29,8 +29,14 @@
     <string name="download_btn">Download</string>
 
     <!-- Settings -->
-    <string name="settings_title">Settings</string>
-    <string name="setting_theme">Theme</string>
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_header_subtitle">متصفح آمن مع مانع إعلانات</string>
+    <string name="settings_adblock_title">مانع الإعلانات</string>
+    <string name="settings_adblock_desc">تشغيل الحماية من الإعلانات والتتبع</string>
+    <string name="settings_privacy_title">الخصوصية</string>
+    <string name="settings_privacy_info">• لا توجد إعلانات داخل التطبيق\n• لا يتم جمع بيانات المستخدم\n• تعطيل ملفات تعريف ارتباط الطرف الثالث\n• منع النوافذ المنبثقة</string>
+    <string name="settings_appearance_title">المظهر</string>
+    <string name="setting_theme">المظهر</string>
     <string name="theme_system">Follow system</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
@@ -39,7 +45,31 @@
     <string name="setting_ad_block">Block ads &amp; trackers</string>
     <string name="setting_tracker_protection">Tracker protection</string>
     <string name="setting_cryptominer_block">Block cryptominers</string>
-    <string name="setting_fingerprinter_block">Block fingerprinters</string>
+    <string name="setting_fingerprinter_block">حظر البصمات الرقمية</string>
+    <string name="setting_cookie_protection">حماية ملفات تعريف الارتباط</string>
+    <string name="setting_enhanced_blocking">الحظر المعزز</string>
+    <string name="settings_extensions_title">الإضافات المدمجة</string>
+    <string name="setting_sponsorblock">SponsorBlock for YouTube</string>
+    <string name="setting_sponsorblock_desc">Skips sponsor segments on YouTube using the SponsorBlock community database.</string>
+    <string name="settings_agent_bridge_title">جسر وكيل الذكاء الاصطناعي</string>
+    <string name="settings_agent_bridge_warning">ميزة متقدمة. فعّل الصلاحيات فقط إذا كنت تستخدم وكيل AI موثوق.</string>
+    <string name="setting_agent_enabled">تفعيل الجسر</string>
+    <string name="setting_agent_dom_read">السماح بقراءة DOM مبسط</string>
+    <string name="setting_agent_click">السماح بالضغط على العناصر</string>
+    <string name="setting_agent_typing">السماح بإدخال النص</string>
+    <string name="setting_agent_scroll">السماح بالتمرير</string>
+    <string name="setting_agent_submit">السماح بإرسال النماذج</string>
+    <string name="agent_control_title">وكيل المتصفح</string>
+    <string name="agent_status_title">حالة الجسر</string>
+    <string name="agent_active_page">الصفحة النشطة</string>
+    <string name="agent_manual_actions">إجراءات يدوية</string>
+    <string name="agent_btn_page_info">قراءة معلومات الصفحة</string>
+    <string name="agent_btn_get_dom">قراءة DOM مبسط</string>
+    <string name="agent_btn_scroll_down">تمرير للأسفل</string>
+    <string name="agent_btn_scroll_up">تمرير للأعلى</string>
+    <string name="agent_result_title">النتيجة</string>
+    <string name="agent_no_result">لا توجد نتيجة بعد.</string>
+    <string name="agent_safety_notice">هذه ميزة متقدمة. لا تسمح للوكيل بالضغط أو الكتابة أو إرسال النماذج إلا إذا كنت تثق بالمهمة.</string>
     <string name="privacy_report_title">Privacy Protection</string>
     <string name="privacy_status_on">Active</string>
     <string name="privacy_status_off">Disabled</string>
@@ -113,9 +143,16 @@
     <string name="menu_desktop_on">Desktop Site ✓</string>
     <string name="setting_swipe_navigation">Swipe back/forward</string>
     <string name="setting_pull_to_refresh">Pull to refresh</string>
+ codex/fix-review-findings
     <string name="setting_behavior_section">Browsing Behavior</string>
     <string name="setting_session_restore">Restore tabs on startup</string>
+
+    <string name="setting_gestures_section">Navigation Gestures</string>
+    <string name="setting_session_restore">استعادة التبويبات عند البدء</string>
+ main
     <string name="setting_session_restore_desc">Reopen your normal tabs when نبض starts.</string>
+    <string name="setting_performance_mode">وضع الأداء السريع</string>
+    <string name="setting_performance_mode_desc">يقلل الفحص البصري لتحسين سرعة فتح المواقع مع إبقاء حظر الإعلانات فعالاً.</string>
     <string name="about_title">About نبض</string>
     <string name="about_subtitle">A GeckoView-powered Android browser</string>
     <string name="about_version_format">Version %1$s (%2$d)</string>

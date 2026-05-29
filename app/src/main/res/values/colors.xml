@@ -1,46 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Primary: Teal/Cyan inspired by modern browser UIs -->
-    <color name="nabd_primary">#0D7377</color>
+    <!-- Professional White & Gray palette -->
+
+    <!-- Primary: Dark charcoal for strong contrast -->
+    <color name="nabd_primary">#1A1A2E</color>
     <color name="nabd_on_primary">#FFFFFF</color>
-    <color name="nabd_primary_dark">#6DD5D9</color>
-    <color name="nabd_on_primary_dark">#003739</color>
-    <color name="nabd_primary_container">#B8F0F2</color>
-    <color name="nabd_primary_container_dark">#1A5C5E</color>
+    <color name="nabd_primary_dark">#E0E0E0</color>
+    <color name="nabd_on_primary_dark">#1A1A2E</color>
+    <color name="nabd_primary_container">#E8E8F0</color>
+    <color name="nabd_primary_container_dark">#2D2D3F</color>
 
-    <!-- Secondary: Warm amber accent -->
-    <color name="nabd_secondary">#7A5C00</color>
+    <!-- Secondary: Medium gray accent -->
+    <color name="nabd_secondary">#5C5C6E</color>
     <color name="nabd_on_secondary">#FFFFFF</color>
-    <color name="nabd_secondary_dark">#F0C645</color>
-    <color name="nabd_on_secondary_dark">#3F3000</color>
+    <color name="nabd_secondary_dark">#C4C4D0</color>
+    <color name="nabd_on_secondary_dark">#2E2E3B</color>
 
-    <!-- Backgrounds and surfaces -->
-    <color name="nabd_background">#F8FAFA</color>
-    <color name="nabd_on_background">#1A1C1C</color>
-    <color name="nabd_surface">#F8FAFA</color>
-    <color name="nabd_on_surface">#1A1C1C</color>
-    <color name="nabd_surface_dark">#0F1415</color>
-    <color name="nabd_on_surface_dark">#E1E3E3</color>
+    <!-- Light mode surfaces: Clean white -->
+    <color name="nabd_background">#FFFFFF</color>
+    <color name="nabd_on_background">#1A1A1A</color>
+    <color name="nabd_surface">#FFFFFF</color>
+    <color name="nabd_on_surface">#1A1A1A</color>
+
+    <!-- Dark mode surfaces: Deep gray -->
+    <color name="nabd_surface_dark">#121212</color>
+    <color name="nabd_on_surface_dark">#E8E8E8</color>
 
     <!-- Surface variants -->
-    <color name="nabd_surface_variant">#DBE5E5</color>
-    <color name="nabd_surface_variant_dark">#3F4949</color>
-    <color name="nabd_on_surface_variant">#3F4949</color>
-    <color name="nabd_on_surface_variant_dark">#BFC9C9</color>
+    <color name="nabd_surface_variant">#F2F2F5</color>
+    <color name="nabd_surface_variant_dark">#2C2C2C</color>
+    <color name="nabd_on_surface_variant">#5C5C5C</color>
+    <color name="nabd_on_surface_variant_dark">#B0B0B0</color>
 
     <!-- Outline -->
-    <color name="nabd_outline">#6F7979</color>
-    <color name="nabd_outline_dark">#899393</color>
+    <color name="nabd_outline">#D0D0D0</color>
+    <color name="nabd_outline_dark">#404040</color>
 
     <!-- Error -->
-    <color name="nabd_error">#BA1A1A</color>
+    <color name="nabd_error">#D32F2F</color>
     <color name="nabd_on_error">#FFFFFF</color>
-    <color name="nabd_error_dark">#FFB4AB</color>
+    <color name="nabd_error_dark">#EF9A9A</color>
     <color name="nabd_on_error_dark">#690005</color>
 
-    <!-- Homepage specific -->
-    <color name="nabd_home_card_bg">#FFFFFF</color>
-    <color name="nabd_home_card_bg_dark">#1C2224</color>
-    <color name="nabd_home_search_bg">#FFFFFF</color>
-    <color name="nabd_home_search_bg_dark">#1C2224</color>
+    <!-- Splash -->
+    <color name="nabd_splash_bg">#FFFFFF</color>
+    <color name="nabd_splash_bg_dark">#121212</color>
 </resources>
