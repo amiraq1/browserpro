@@ -59,6 +59,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONObject
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
@@ -174,12 +176,19 @@ class MainActivity : AppCompatActivity() {
         if (isFinishing && ::settingsRepository.isInitialized && settingsRepository.isClearOnExitEnabled()) {
             try {
                 val manager = ClearBrowsingDataManager(this)
-                manager.clear(
-                    clearHistory = true,
-                    clearCookies = true,
-                    clearCache = true,
-                    geckoRuntime = if (::geckoRuntime.isInitialized) geckoRuntime else null
-                )
+                runBlocking(Dispatchers.IO) {
+                    val result = withTimeoutOrNull(CLEAR_ON_EXIT_TIMEOUT_MS) {
+                        manager.clear(
+                            clearHistory = true,
+                            clearCookies = true,
+                            clearCache = true,
+                            geckoRuntime = if (::geckoRuntime.isInitialized) geckoRuntime else null
+                        )
+                    }
+                    if (result == null) {
+                        Log.w(TAG, "Clear on exit timed out")
+                    }
+                }
             } catch (e: Exception) { Log.e(TAG, "Clear on exit failed", e) }
         }
         scope.cancel()
@@ -242,6 +251,11 @@ class MainActivity : AppCompatActivity() {
         }
         ViewCompat.requestApplyInsets(browserChrome)
     }
+ codex/fix-review-findings
+
+    private fun setupGeckoRuntime() { try { geckoRuntime = GeckoRuntime.getDefault(this); PrivacyProtectionManager.applyToRuntime(geckoRuntime.settings, settingsRepository) } catch (e: Exception) { Log.e(TAG, "Failed to create GeckoRuntime", e) } }
+
+ main
  main
     private fun setupTabManager() { tabManager = TabManager(geckoRuntime, geckoView) { tab -> if (isWebFullscreen) exitWebFullscreen(); hideFindBarSilently(); if (tab.isHomePage) showHomePage() else hideHomePage(); updateUrlField(tab.url); updateProgressForTab(tab); updateTabCountButton(); reRegisterExtensionDelegateForActiveTab() } }
     private fun setupTabDelegates(tab: BrowserTab) { tab.session.setProgressDelegate(createProgressDelegate(tab)); tab.session.setNavigationDelegate(createNavigationDelegate(tab)); tab.session.setContentDelegate(createContentDelegate()) }
@@ -493,9 +507,7 @@ class MainActivity : AppCompatActivity() {
             val tab = tabManager.createTab(saved.url, isPrivate = false)
             setupTabDelegates(tab)
             if (saved.isDesktopMode) {
-                tab.isDesktopMode = true
-                tabManager.toggleDesktopMode(tab.id) // applies UA
-                tab.isDesktopMode = true // ensure state after toggle
+                tabManager.setDesktopMode(tab.id, true)
             }
             if (saved.isHomePage) {
                 tab.isHomePage = true
@@ -837,7 +849,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    private fun getErrorColor(): Int { val tv = android.util.TypedValue(); theme.resolveAttribute(android.R.attr.colorError, tv, true); return if (tv.data != 0) tv.data else android.graphics.Color.parseColor("#BA1A1A") }
+    private fun getErrorColor(): Int { val tv = android.util.TypedValue(); theme.resolveAttribute(androidx.appcompat.R.attr.colorError, tv, true); return if (tv.data != 0) tv.data else android.graphics.Color.parseColor("#BA1A1A") }
     private fun getThemeColor(attr: Int): Int { val tv = android.util.TypedValue(); theme.resolveAttribute(attr, tv, true); return tv.data }
     private fun normalizeFavoriteUrl(rawUrl: String): String? {
         val input = rawUrl.trim()
@@ -881,11 +893,9 @@ class MainActivity : AppCompatActivity() {
         tabCountButton.text = if (isPrivate) "P$count" else count
     }
     private fun updateProgressForTab(tab: BrowserTab) { if (tab.isLoading) { pageProgress.progress = tab.progress.coerceIn(0, 100); pageProgress.visibility = View.VISIBLE } else pageProgress.visibility = View.GONE }
-    private fun recordHistory(title: String, url: String) {
-        // Do not record history for private tabs
-        val activeTab = tabManager.getActiveTab()
-        if (activeTab?.isPrivate == true) return
-        if (activeTab?.isHomePage == true || !isWebUrl(url)) return
+    private fun recordHistory(tab: BrowserTab, title: String, url: String) {
+        if (tab.isPrivate) return
+        if (tab.isHomePage || !isWebUrl(url)) return
         historyRepository.addVisit(title, url)
     }
 
@@ -1078,7 +1088,24 @@ class MainActivity : AppCompatActivity() {
         dialog.window?.setBackgroundDrawable(ColorDrawable(getThemeColor(com.google.android.material.R.attr.colorSurface)))
     }
 
+ codex/fix-review-findings
+    private fun installSummarizerExtension() {
+        geckoRuntime.webExtensionController.ensureBuiltIn(EXTENSION_LOCATION, EXTENSION_ID).accept({ extension ->
+            runOnUiThread {
+                if (extension == null) { Log.e(TAG, "Summarizer extension returned null"); return@runOnUiThread }
+                summarizerExtension = extension
+                extension.setMessageDelegate(createNativeMessageDelegate(), NATIVE_APP_ID)
+                val actionDelegate = createActionDelegate()
+                extension.setActionDelegate(actionDelegate)
+                tabManager.getActiveSession()?.webExtensionController?.setActionDelegate(extension, actionDelegate)
+                Log.d(TAG, "Summarizer extension installed")
+            }
+        }, { throwable -> runOnUiThread { Log.e(TAG, "Failed to install summarizer extension", throwable) } })
+    }
+    private fun reRegisterExtensionDelegateForActiveTab() { val ext = summarizerExtension ?: return; val session = tabManager.getActiveSession() ?: return; try { session.webExtensionController.setActionDelegate(ext, createActionDelegate()) } catch (e: Exception) { Log.e(TAG, "Error re-registering extension delegate", e) } }
+
     private fun reRegisterExtensionDelegateForActiveTab() { val ext = extensionManager.getExtension(ExtensionManager.SUMMARIZER_ID) ?: return; val session = tabManager.getActiveSession() ?: return; try { session.webExtensionController.setActionDelegate(ext, createActionDelegate()) } catch (e: Exception) { Log.e(TAG, "Error re-registering extension delegate", e) } }
+ main
     private fun createNativeMessageDelegate() = object : WebExtension.MessageDelegate {
         override fun onMessage(nativeApp: String, message: Any, sender: WebExtension.MessageSender): GeckoResult<Any>? {
             if (nativeApp != NATIVE_APP_ID) return errorResult("Unsupported native app: $nativeApp")
@@ -1116,7 +1143,7 @@ class MainActivity : AppCompatActivity() {
     private fun createProgressDelegate(tab: BrowserTab) = object : GeckoSession.ProgressDelegate {
         override fun onPageStart(session: GeckoSession, url: String) { tab.isLoading = true; tab.progress = 0; if (tab.id == tabManager.getActiveTab()?.id) { pageProgress.progress = 0; pageProgress.visibility = View.VISIBLE } }
         override fun onProgressChange(session: GeckoSession, progress: Int) { tab.progress = progress.coerceIn(0, 100); if (tab.id == tabManager.getActiveTab()?.id) { pageProgress.progress = tab.progress; if (tab.progress < 100) pageProgress.visibility = View.VISIBLE } }
-        override fun onPageStop(session: GeckoSession, success: Boolean) { tab.isLoading = false; tab.progress = 100; if (tab.id == tabManager.getActiveTab()?.id) { pageProgress.progress = 100; pageProgress.visibility = View.GONE; swipeRefreshLayout.isRefreshing = false }; if (success && tab.url.isNotBlank()) recordHistory(tab.title.ifBlank { tab.url }, tab.url); if (!success) Log.e(TAG, "Page failed in tab ${tab.id}") }
+        override fun onPageStop(session: GeckoSession, success: Boolean) { tab.isLoading = false; tab.progress = 100; if (tab.id == tabManager.getActiveTab()?.id) { pageProgress.progress = 100; pageProgress.visibility = View.GONE; swipeRefreshLayout.isRefreshing = false }; if (success && tab.url.isNotBlank()) recordHistory(tab, tab.title.ifBlank { tab.url }, tab.url); if (!success) Log.e(TAG, "Page failed in tab ${tab.id}") }
     }
     private fun createNavigationDelegate(tab: BrowserTab) = object : GeckoSession.NavigationDelegate {
         override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>, hasUserGesture: Boolean) {
@@ -1194,6 +1221,12 @@ class MainActivity : AppCompatActivity() {
         private const val PREFS_NAME = "nabd_preferences"
         private const val PREF_LAST_URL = "last_url"
         private const val DEFAULT_HOME = "https://www.google.com"
+ codex/fix-review-findings
+        private const val CLEAR_ON_EXIT_TIMEOUT_MS = 3000L
+        private const val EXTENSION_LOCATION = "resource://android/assets/summarizer-extension/"
+        private const val EXTENSION_ID = "summarizer@example.com"
+
+ main
         private const val NATIVE_APP_ID = "browser"
     }
 }

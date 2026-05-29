@@ -111,13 +111,13 @@ class SettingsRepository(context: Context) {
 
     // ─── Search Engine Settings ──────────────────────────────────────────────────
 
-    fun getSearchEngineId(): String = prefs.getString(KEY_SEARCH_ENGINE_ID, "google") ?: "google"
+    fun getSearchEngineId(): String = prefs.getString(KEY_SEARCH_ENGINE_ID, DEFAULT_SEARCH_ENGINE_ID) ?: DEFAULT_SEARCH_ENGINE_ID
     fun setSearchEngineId(id: String) { prefs.edit().putString(KEY_SEARCH_ENGINE_ID, id).apply() }
 
-    fun getCustomSearchEngineName(): String = prefs.getString(KEY_CUSTOM_SEARCH_NAME, "Custom") ?: "Custom"
+    fun getCustomSearchEngineName(): String = prefs.getString(KEY_CUSTOM_SEARCH_NAME, DEFAULT_CUSTOM_SEARCH_NAME) ?: DEFAULT_CUSTOM_SEARCH_NAME
     fun setCustomSearchEngineName(name: String) { prefs.edit().putString(KEY_CUSTOM_SEARCH_NAME, name).apply() }
 
-    fun getCustomSearchEngineTemplate(): String = prefs.getString(KEY_CUSTOM_SEARCH_TEMPLATE, "https://example.com/search?q=%s") ?: "https://example.com/search?q=%s"
+    fun getCustomSearchEngineTemplate(): String = prefs.getString(KEY_CUSTOM_SEARCH_TEMPLATE, DEFAULT_CUSTOM_SEARCH_TEMPLATE) ?: DEFAULT_CUSTOM_SEARCH_TEMPLATE
     fun setCustomSearchEngineTemplate(template: String) { prefs.edit().putString(KEY_CUSTOM_SEARCH_TEMPLATE, template).apply() }
 
     // ─── Gesture Settings ────────────────────────────────────────────────────────
@@ -158,8 +158,18 @@ class SettingsRepository(context: Context) {
             .putBoolean(KEY_CRYPTOMINER_BLOCK, true)
             .putBoolean(KEY_FINGERPRINTER_BLOCK, true)
             .putBoolean(KEY_IMMERSIVE_BROWSING, false)
+ codex/fix-review-findings
+            .putBoolean(KEY_CUSTOM_HOMEPAGE, true)
+            .putBoolean(KEY_CLEAR_ON_EXIT, false)
+            .putString(KEY_SEARCH_ENGINE_ID, DEFAULT_SEARCH_ENGINE_ID)
+            .putString(KEY_CUSTOM_SEARCH_NAME, DEFAULT_CUSTOM_SEARCH_NAME)
+            .putString(KEY_CUSTOM_SEARCH_TEMPLATE, DEFAULT_CUSTOM_SEARCH_TEMPLATE)
+            .putBoolean(KEY_SWIPE_NAV, true)
+            .putBoolean(KEY_PULL_REFRESH, true)
+            .putBoolean(KEY_SESSION_RESTORE, true)
             .putBoolean(KEY_SUMMARIZER_EXT, true)
             .putBoolean(KEY_DARK_MODE_EXT, false)
+ main
             .apply()
     }
 
@@ -196,5 +206,8 @@ class SettingsRepository(context: Context) {
         private const val KEY_SUMMARIZER_EXT = "summarizer_extension_enabled"
         private const val KEY_DARK_MODE_EXT = "dark_mode_extension_enabled"
         private const val DEFAULT_THEME_MODE = "system"
+        private const val DEFAULT_SEARCH_ENGINE_ID = "google"
+        private const val DEFAULT_CUSTOM_SEARCH_NAME = "Custom"
+        private const val DEFAULT_CUSTOM_SEARCH_TEMPLATE = "https://example.com/search?q=%s"
     }
 }

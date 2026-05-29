@@ -9,6 +9,11 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import org.mozilla.geckoview.GeckoRuntime
 
 class ClearBrowsingDataActivity : AppCompatActivity() {
@@ -22,6 +27,7 @@ class ClearBrowsingDataActivity : AppCompatActivity() {
     private lateinit var quickLinksCheck: CheckBox
     private lateinit var settingsCheck: CheckBox
     private lateinit var clearButton: MaterialButton
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +55,11 @@ class ClearBrowsingDataActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    override fun onDestroy() {
+        scope.cancel()
+        super.onDestroy()
+    }
+
     private fun confirmClear() {
         if (!anySelected()) {
             Snackbar.make(clearButton, R.string.clear_select_one, Snackbar.LENGTH_SHORT).show()
@@ -72,34 +83,34 @@ class ClearBrowsingDataActivity : AppCompatActivity() {
 
     private fun performClear() {
         val manager = ClearBrowsingDataManager(this)
+        clearButton.isEnabled = false
 
-        // Try to get GeckoRuntime if available (singleton per app)
         val runtime: GeckoRuntime? = try {
-            GeckoRuntime.create(this)
+            GeckoRuntime.getDefault(this)
         } catch (e: Exception) {
-            // Runtime already exists — can't create a second one.
-            // GeckoView storage clearing will be skipped here;
-            // it runs from MainActivity's clear-on-exit instead.
             null
         }
 
-        val result = manager.clear(
-            clearHistory = historyCheck.isChecked,
-            clearDownloads = downloadsCheck.isChecked,
-            clearCookies = cookiesCheck.isChecked,
-            clearCache = cacheCheck.isChecked,
-            clearBookmarks = bookmarksCheck.isChecked,
-            clearQuickLinks = quickLinksCheck.isChecked,
-            clearSettings = settingsCheck.isChecked,
-            geckoRuntime = runtime
-        )
+        scope.launch {
+            val result = manager.clear(
+                clearHistory = historyCheck.isChecked,
+                clearDownloads = downloadsCheck.isChecked,
+                clearCookies = cookiesCheck.isChecked,
+                clearCache = cacheCheck.isChecked,
+                clearBookmarks = bookmarksCheck.isChecked,
+                clearQuickLinks = quickLinksCheck.isChecked,
+                clearSettings = settingsCheck.isChecked,
+                geckoRuntime = runtime
+            )
 
-        val message = if (result.failed.isEmpty()) {
-            getString(R.string.clear_success)
-        } else {
-            getString(R.string.clear_partial, result.failed.joinToString(", "))
+            clearButton.isEnabled = true
+            val message = if (result.failed.isEmpty()) {
+                getString(R.string.clear_success)
+            } else {
+                getString(R.string.clear_partial, result.failed.joinToString(", "))
+            }
+
+            Snackbar.make(clearButton, message, Snackbar.LENGTH_LONG).show()
         }
-
-        Snackbar.make(clearButton, message, Snackbar.LENGTH_LONG).show()
     }
 }
