@@ -143,13 +143,10 @@
     <string name="menu_desktop_on">Desktop Site ✓</string>
     <string name="setting_swipe_navigation">Swipe back/forward</string>
     <string name="setting_pull_to_refresh">Pull to refresh</string>
- codex/fix-review-findings
     <string name="setting_behavior_section">Browsing Behavior</string>
     <string name="setting_session_restore">Restore tabs on startup</string>
 
     <string name="setting_gestures_section">Navigation Gestures</string>
-    <string name="setting_session_restore">استعادة التبويبات عند البدء</string>
- main
     <string name="setting_session_restore_desc">Reopen your normal tabs when نبض starts.</string>
     <string name="setting_performance_mode">وضع الأداء السريع</string>
     <string name="setting_performance_mode_desc">يقلل الفحص البصري لتحسين سرعة فتح المواقع مع إبقاء حظر الإعلانات فعالاً.</string>

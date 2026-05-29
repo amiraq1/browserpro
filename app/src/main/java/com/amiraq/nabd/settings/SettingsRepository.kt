@@ -158,7 +158,6 @@ class SettingsRepository(context: Context) {
             .putBoolean(KEY_CRYPTOMINER_BLOCK, true)
             .putBoolean(KEY_FINGERPRINTER_BLOCK, true)
             .putBoolean(KEY_IMMERSIVE_BROWSING, false)
- codex/fix-review-findings
             .putBoolean(KEY_CUSTOM_HOMEPAGE, true)
             .putBoolean(KEY_CLEAR_ON_EXIT, false)
             .putString(KEY_SEARCH_ENGINE_ID, DEFAULT_SEARCH_ENGINE_ID)
@@ -169,7 +168,6 @@ class SettingsRepository(context: Context) {
             .putBoolean(KEY_SESSION_RESTORE, true)
             .putBoolean(KEY_SUMMARIZER_EXT, true)
             .putBoolean(KEY_DARK_MODE_EXT, false)
- main
             .apply()
     }
 

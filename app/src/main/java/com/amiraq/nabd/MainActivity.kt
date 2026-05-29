@@ -20,6 +20,8 @@ import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.amiraq.nabd.bookmarks.BookmarkRepository
 import com.amiraq.nabd.downloads.DownloadItem
 import com.amiraq.nabd.downloads.DownloadRepository
@@ -128,27 +130,22 @@ class MainActivity : AppCompatActivity() {
         sessionRepository = SessionRepository(this)
         summarizer = SummarizerFactory.create(settingsRepository)
         bindViews()
+        applySafeAreaInsets()
         setupGeckoRuntime()
-        extensionManager = ExtensionManager(geckoRuntime, settingsRepository)
+        extensionManager = ExtensionManager(this, geckoRuntime, settingsRepository)
         setupTabManager()
         setupBrowserControls()
         setupBackNavigation()
- feature/phases-2-to-16
-        installSummarizerExtension()
-        // Install other enabled embedded extensions
-        com.amiraq.nabd.extensions.ExtensionManager(this, geckoRuntime, settingsRepository).installEnabledExtensions()
-
-        
-        extensionManager.installExtensions { extension ->
-            summarizerExtension = extension
-            extension.setMessageDelegate(createNativeMessageDelegate(), NATIVE_APP_ID)
-            val actionDelegate = createActionDelegate()
-            extension.setActionDelegate(actionDelegate)
-            tabManager.getActiveSession()?.webExtensionController?.setActionDelegate(extension, actionDelegate)
-            Log.d(TAG, "Summarizer extension initialized from ExtensionManager")
+        extensionManager.installEnabledExtensions { extension ->
+            runOnUiThread {
+                summarizerExtension = extension
+                extension.setMessageDelegate(createNativeMessageDelegate(), NATIVE_APP_ID)
+                val actionDelegate = createActionDelegate()
+                extension.setActionDelegate(actionDelegate)
+                tabManager.getActiveSession()?.webExtensionController?.setActionDelegate(extension, actionDelegate)
+                Log.d(TAG, "Summarizer extension initialized from ExtensionManager")
+            }
         }
-
- main
         // Restore session or create first tab
         if (!restoreSavedSession()) {
             val startUrl = preferences.getString(PREF_LAST_URL, DEFAULT_HOME).orEmpty().ifBlank { DEFAULT_HOME }
@@ -164,7 +161,7 @@ class MainActivity : AppCompatActivity() {
         updateTabCountButton()
     }
     override fun onStart() { super.onStart(); tabManager.getActiveSession()?.setActive(true) }
-    override fun onResume() { super.onResume(); if (::settingsRepository.isInitialized) { summarizer = SummarizerFactory.create(settingsRepository); searchEngineManager = SearchEngineManager(settingsRepository); if (::geckoRuntime.isInitialized) PrivacyProtectionManager.applyToRuntime(geckoRuntime.settings, settingsRepository); updateGestureSettings() }; if (!isWebFullscreen) setSystemBarsVisible(true) }
+    override fun onResume() { super.onResume(); if (::settingsRepository.isInitialized) { summarizer = SummarizerFactory.create(settingsRepository); searchEngineManager = SearchEngineManager(settingsRepository); if (::geckoRuntime.isInitialized) { PrivacyProtectionManager.applyToRuntime(geckoRuntime.settings, settingsRepository); if (::extensionManager.isInitialized) extensionManager.refreshAdBlockState() }; updateGestureSettings() }; if (!isWebFullscreen) setSystemBarsVisible(true) }
     override fun onStop() { tabManager.getActiveSession()?.setActive(false); saveCurrentSession(); super.onStop() }
     override fun onDestroy() {
         dismissExtensionPopup()
@@ -219,25 +216,6 @@ class MainActivity : AppCompatActivity() {
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
         browserContentContainer = findViewById(R.id.browserContentContainer)
     }
- feature/phases-2-to-16
-
-
- main
-    private fun setupGeckoRuntime() {
-        try {
-            val settings = org.mozilla.geckoview.GeckoRuntimeSettings.Builder()
-                .consoleOutput(false)
-                .contentBlocking(PrivacyProtectionManager.buildContentBlockingSettings(settingsRepository))
-                .build()
-            geckoRuntime = GeckoRuntime.create(this, settings)
-            PrivacyProtectionManager.applyToRuntime(geckoRuntime.settings, settingsRepository)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to create GeckoRuntime", e)
-        }
-    }
- feature/phases-2-to-16
-
-
 
     private fun applySafeAreaInsets() {
         val start = browserChrome.paddingStart
@@ -251,12 +229,9 @@ class MainActivity : AppCompatActivity() {
         }
         ViewCompat.requestApplyInsets(browserChrome)
     }
- codex/fix-review-findings
 
     private fun setupGeckoRuntime() { try { geckoRuntime = GeckoRuntime.getDefault(this); PrivacyProtectionManager.applyToRuntime(geckoRuntime.settings, settingsRepository) } catch (e: Exception) { Log.e(TAG, "Failed to create GeckoRuntime", e) } }
 
- main
- main
     private fun setupTabManager() { tabManager = TabManager(geckoRuntime, geckoView) { tab -> if (isWebFullscreen) exitWebFullscreen(); hideFindBarSilently(); if (tab.isHomePage) showHomePage() else hideHomePage(); updateUrlField(tab.url); updateProgressForTab(tab); updateTabCountButton(); reRegisterExtensionDelegateForActiveTab() } }
     private fun setupTabDelegates(tab: BrowserTab) { tab.session.setProgressDelegate(createProgressDelegate(tab)); tab.session.setNavigationDelegate(createNavigationDelegate(tab)); tab.session.setContentDelegate(createContentDelegate()) }
     private fun setupBrowserControls() {
@@ -901,11 +876,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun showPrivacyReport() {
         val url = tabManager.getActiveTab()?.url.orEmpty().ifBlank { "—" }
-        val adBlock = if (settingsRepository.isAdBlockEnabled()) getString(R.string.privacy_status_on) else getString(R.string.privacy_status_off)
+        val adBlock = if (settingsRepository.isAdBlockEnabled()) getString(R.string.privacy_status_on) + " (ad domains + trackers)" else getString(R.string.privacy_status_off)
         val tracker = if (settingsRepository.isTrackerProtectionEnabled()) getString(R.string.privacy_status_on) else getString(R.string.privacy_status_off)
         val crypto = if (settingsRepository.isCryptominerBlockingEnabled()) getString(R.string.privacy_status_on) else getString(R.string.privacy_status_off)
         val finger = if (settingsRepository.isFingerprinterBlockingEnabled()) getString(R.string.privacy_status_on) else getString(R.string.privacy_status_off)
-        val message = "Site: $url\n\nAd blocking: $adBlock\nTracker protection: $tracker\nCryptominer blocking: $crypto\nFingerprinter blocking: $finger\n\nProtection is applied at the engine level via GeckoView Enhanced Tracking Protection."
+        val message = "Site: $url\n\nAd blocking: $adBlock\nTracker protection: $tracker\nCryptominer blocking: $crypto\nFingerprinter blocking: $finger\n\nAd blocking uses a built-in request blocker plus GeckoView Enhanced Tracking Protection."
         MaterialAlertDialogBuilder(this).setTitle(R.string.privacy_report_title).setMessage(message).setPositiveButton(android.R.string.ok, null).show()
     }
 
@@ -1088,24 +1063,8 @@ class MainActivity : AppCompatActivity() {
         dialog.window?.setBackgroundDrawable(ColorDrawable(getThemeColor(com.google.android.material.R.attr.colorSurface)))
     }
 
- codex/fix-review-findings
-    private fun installSummarizerExtension() {
-        geckoRuntime.webExtensionController.ensureBuiltIn(EXTENSION_LOCATION, EXTENSION_ID).accept({ extension ->
-            runOnUiThread {
-                if (extension == null) { Log.e(TAG, "Summarizer extension returned null"); return@runOnUiThread }
-                summarizerExtension = extension
-                extension.setMessageDelegate(createNativeMessageDelegate(), NATIVE_APP_ID)
-                val actionDelegate = createActionDelegate()
-                extension.setActionDelegate(actionDelegate)
-                tabManager.getActiveSession()?.webExtensionController?.setActionDelegate(extension, actionDelegate)
-                Log.d(TAG, "Summarizer extension installed")
-            }
-        }, { throwable -> runOnUiThread { Log.e(TAG, "Failed to install summarizer extension", throwable) } })
-    }
-    private fun reRegisterExtensionDelegateForActiveTab() { val ext = summarizerExtension ?: return; val session = tabManager.getActiveSession() ?: return; try { session.webExtensionController.setActionDelegate(ext, createActionDelegate()) } catch (e: Exception) { Log.e(TAG, "Error re-registering extension delegate", e) } }
-
     private fun reRegisterExtensionDelegateForActiveTab() { val ext = extensionManager.getExtension(ExtensionManager.SUMMARIZER_ID) ?: return; val session = tabManager.getActiveSession() ?: return; try { session.webExtensionController.setActionDelegate(ext, createActionDelegate()) } catch (e: Exception) { Log.e(TAG, "Error re-registering extension delegate", e) } }
- main
+
     private fun createNativeMessageDelegate() = object : WebExtension.MessageDelegate {
         override fun onMessage(nativeApp: String, message: Any, sender: WebExtension.MessageSender): GeckoResult<Any>? {
             if (nativeApp != NATIVE_APP_ID) return errorResult("Unsupported native app: $nativeApp")
@@ -1221,12 +1180,7 @@ class MainActivity : AppCompatActivity() {
         private const val PREFS_NAME = "nabd_preferences"
         private const val PREF_LAST_URL = "last_url"
         private const val DEFAULT_HOME = "https://www.google.com"
- codex/fix-review-findings
         private const val CLEAR_ON_EXIT_TIMEOUT_MS = 3000L
-        private const val EXTENSION_LOCATION = "resource://android/assets/summarizer-extension/"
-        private const val EXTENSION_ID = "summarizer@example.com"
-
- main
         private const val NATIVE_APP_ID = "browser"
     }
 }

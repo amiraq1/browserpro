@@ -1,0 +1,20 @@
+{
+  "manifest_version": 2,
+  "name": "Nabd Ad Blocker",
+  "version": "1.0.0",
+  "description": "Blocks common ad network requests in GeckoView.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "adblock@nabd.local"
+    }
+  },
+  "permissions": [
+    "<all_urls>",
+    "webRequest",
+    "webRequestBlocking",
+    "geckoViewAddons"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  }
+}

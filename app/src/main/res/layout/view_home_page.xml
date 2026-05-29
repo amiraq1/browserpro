@@ -42,11 +42,6 @@
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            app:cardCornerRadius="28dp"
-            app:cardElevation="2dp"
-            app:strokeColor="?attr/colorOutline"
-            app:strokeWidth="1dp">
             android:layout_marginTop="28dp"
             android:hint="@string/url_hint"
             app:boxBackgroundColor="?attr/colorSurface"
