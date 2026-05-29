@@ -30,6 +30,8 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var swipeNavSwitch: MaterialSwitch
     private lateinit var pullRefreshSwitch: MaterialSwitch
     private lateinit var sessionRestoreSwitch: MaterialSwitch
+    private lateinit var customHomepageSwitch: MaterialSwitch
+    private lateinit var clearOnExitSwitch: MaterialSwitch
     private lateinit var endpointLayout: TextInputLayout
     private lateinit var endpointInput: TextInputEditText
     private lateinit var languageLayout: TextInputLayout
@@ -66,6 +68,8 @@ class SettingsActivity : AppCompatActivity() {
         swipeNavSwitch = findViewById(R.id.swipeNavSwitch)
         pullRefreshSwitch = findViewById(R.id.pullRefreshSwitch)
         sessionRestoreSwitch = findViewById(R.id.sessionRestoreSwitch)
+        customHomepageSwitch = findViewById(R.id.customHomepageSwitch)
+        clearOnExitSwitch = findViewById(R.id.clearOnExitSwitch)
         remoteSwitch = findViewById(R.id.remoteSwitch)
         endpointLayout = findViewById(R.id.endpointLayout)
         endpointInput = findViewById(R.id.endpointInput)
@@ -95,6 +99,8 @@ class SettingsActivity : AppCompatActivity() {
         swipeNavSwitch.isChecked = repository.isSwipeNavigationEnabled()
         pullRefreshSwitch.isChecked = repository.isPullToRefreshEnabled()
         sessionRestoreSwitch.isChecked = repository.isSessionRestoreEnabled()
+        customHomepageSwitch.isChecked = repository.isCustomHomepageEnabled()
+        clearOnExitSwitch.isChecked = repository.isClearOnExitEnabled()
         updateFieldsEnabled()
         updateThemeButtonLabel()
         updateSearchEngineButtonLabel()
@@ -268,6 +274,8 @@ class SettingsActivity : AppCompatActivity() {
         repository.setSwipeNavigationEnabled(swipeNavSwitch.isChecked)
         repository.setPullToRefreshEnabled(pullRefreshSwitch.isChecked)
         repository.setSessionRestoreEnabled(sessionRestoreSwitch.isChecked)
+        repository.setCustomHomepageEnabled(customHomepageSwitch.isChecked)
+        repository.setClearOnExitEnabled(clearOnExitSwitch.isChecked)
 
         Snackbar.make(saveButton, R.string.settings_saved, Snackbar.LENGTH_SHORT).show()
     }

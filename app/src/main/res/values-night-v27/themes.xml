@@ -17,6 +17,7 @@
         <item name="android:navigationBarColor">@color/nabd_surface_dark</item>
         <item name="android:statusBarColor">@color/nabd_surface_dark</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 
     <style name="Theme.Nabd.Splash" parent="Theme.SplashScreen">

@@ -182,6 +182,13 @@ class TabManager(
         return tab
     }
 
+    fun setDesktopMode(tabId: String, enabled: Boolean): BrowserTab? {
+        val tab = tabs.find { it.id == tabId } ?: return null
+        tab.isDesktopMode = enabled
+        applyUserAgent(tab)
+        return tab
+    }
+
     private fun applyUserAgent(tab: BrowserTab) {
         try {
             tab.session.settings.userAgentOverride = if (tab.isDesktopMode) {

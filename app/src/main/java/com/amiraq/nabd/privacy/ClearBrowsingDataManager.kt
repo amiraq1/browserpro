@@ -7,7 +7,10 @@ import com.amiraq.nabd.downloads.DownloadRepository
 import com.amiraq.nabd.history.HistoryRepository
 import com.amiraq.nabd.home.HomePageRepository
 import com.amiraq.nabd.settings.SettingsRepository
+import kotlin.coroutines.resume
+import kotlinx.coroutines.suspendCancellableCoroutine
 import org.mozilla.geckoview.GeckoRuntime
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.StorageController
 
 /**
@@ -24,7 +27,7 @@ class ClearBrowsingDataManager(private val context: Context) {
      * Clears selected data categories.
      * GeckoView operations require a runtime instance.
      */
-    fun clear(
+    suspend fun clear(
         clearHistory: Boolean = false,
         clearDownloads: Boolean = false,
         clearCookies: Boolean = false,
@@ -94,22 +97,14 @@ class ClearBrowsingDataManager(private val context: Context) {
                 try {
                     val storageController = geckoRuntime.storageController
                     if (clearCookies) {
-                        storageController.clearData(StorageController.ClearFlags.COOKIES)
-                            .accept({ cleared.add(CAT_COOKIES) }, { e ->
-                                Log.e(TAG, "Failed to clear cookies", e)
-                                failed.add(CAT_COOKIES)
-                            })
-                        storageController.clearData(StorageController.ClearFlags.SITE_DATA)
-                            .accept({}, { e -> Log.w(TAG, "Site data clear issue", e) })
+                        val cookiesCleared = clearGeckoData(storageController, StorageController.ClearFlags.COOKIES, "cookies")
+                        val siteDataCleared = clearGeckoData(storageController, StorageController.ClearFlags.SITE_DATA, "site data")
+                        if (cookiesCleared && siteDataCleared) cleared.add(CAT_COOKIES) else failed.add(CAT_COOKIES)
                     }
                     if (clearCache) {
-                        storageController.clearData(StorageController.ClearFlags.NETWORK_CACHE)
-                            .accept({ cleared.add(CAT_CACHE) }, { e ->
-                                Log.e(TAG, "Failed to clear cache", e)
-                                failed.add(CAT_CACHE)
-                            })
-                        storageController.clearData(StorageController.ClearFlags.IMAGE_CACHE)
-                            .accept({}, { e -> Log.w(TAG, "Image cache clear issue", e) })
+                        val networkCacheCleared = clearGeckoData(storageController, StorageController.ClearFlags.NETWORK_CACHE, "network cache")
+                        val imageCacheCleared = clearGeckoData(storageController, StorageController.ClearFlags.IMAGE_CACHE, "image cache")
+                        if (networkCacheCleared && imageCacheCleared) cleared.add(CAT_CACHE) else failed.add(CAT_CACHE)
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "GeckoView storage clearing failed", e)
@@ -124,6 +119,20 @@ class ClearBrowsingDataManager(private val context: Context) {
         }
 
         return ClearBrowsingDataResult(cleared, failed)
+    }
+
+    private suspend fun clearGeckoData(
+        storageController: StorageController,
+        flags: Long,
+        label: String
+    ): Boolean = suspendCancellableCoroutine { continuation ->
+        val result: GeckoResult<Void> = storageController.clearData(flags)
+        result.accept({
+            if (continuation.isActive) continuation.resume(true)
+        }, { e ->
+            Log.e(TAG, "Failed to clear $label", e)
+            if (continuation.isActive) continuation.resume(false)
+        })
     }
 
     companion object {
